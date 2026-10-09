@@ -1,4 +1,5 @@
 const express = require("express");
+const path = require("path");
 const cors = require("cors");
 require("dotenv").config();
 
@@ -8,6 +9,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(express.static(__dirname));
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -17,10 +19,7 @@ const pool = new Pool({
 });
 
 app.get("/", (req, res) => {
-  res.json({
-    status: "online",
-    message: "Backend Freelancer Itaúna funcionando!"
-  });
+  res.sendFile(path.join(__dirname, "index.html"));
 });
 
 app.get("/teste-neon", async (req, res) => {
