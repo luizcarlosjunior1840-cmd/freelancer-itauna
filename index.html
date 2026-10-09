@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#123b2a">
+<title>Freelancer Itaúna</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;color:#183126;background:#f5f7f5}
+header{background:#123b2a;color:white;padding:20px 16px}
+.wrap{max-width:900px;margin:auto}
+.brand{font-size:23px;font-weight:800}
+.brand span{color:#9ee6b0}
+.hero{padding:48px 18px 35px;text-align:center;background:#e6f4e9}
+h1{font-size:clamp(30px,7vw,46px);margin:0 0 16px;line-height:1.12}
+p{line-height:1.6}
+.hero p{max-width:580px;margin:0 auto 24px}
+.actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+a.btn,button{display:inline-block;border:0;border-radius:9px;padding:14px 18px;font-size:16px;font-weight:bold;text-decoration:none;cursor:pointer}
+.primary{background:#176b43;color:white}
+.secondary{background:white;color:#176b43;border:1px solid #176b43!important}
+section{padding:28px 16px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.card{background:white;padding:22px;border-radius:14px;border:1px solid #e0e8e1}
+.card h2{margin-top:0}
+.note{font-size:14px;color:#53665a}
+footer{text-align:center;padding:24px;background:#123b2a;color:white}
+</style>
+</head>
+<body>
+<header><div class="wrap brand">Freelancer <span>Itaúna</span></div></header>
+<main>
+<div class="hero">
+<div class="wrap">
+<h1>Encontre o profissional certo em Itaúna</h1>
+<p>Conectamos clientes a profissionais e prestadores de serviços da nossa cidade. Encontre ajuda para seu próximo projeto ou divulgue seu trabalho.</p>
+<div class="actions">
+<a class="btn primary" href="#clientes">Quero contratar</a>
+<a class="btn secondary" href="#profissionais">Sou profissional</a>
+</div>
+</div>
+</div>
+<section class="wrap">
+<h2>Como podemos ajudar?</h2>
+<div class="cards">
+<article class="card" id="clientes">
+<h2>Para clientes</h2>
+<p>Encontre profissionais para serviços, reparos e projetos em Itaúna.</p>
+<a class="btn primary" href="mailto:contato@freelanceritauna.com?subject=Quero%20contratar%20um%20profissional">Tenho um serviço</a>
+</article>
+<article class="card" id="profissionais">
+<h2>Para profissionais</h2>
+<p>Prepare-se para divulgar seus serviços e receber oportunidades de trabalho.</p>
+<a class="btn secondary" href="mailto:contato@freelanceritauna.com?subject=Quero%20me%20cadastrar%20como%20profissional">Quero participar</a>
+</article>
+</div>
+<p class="note">Versão inicial de apresentação. Os cadastros ainda precisam ser conectados ao sistema.</p>
+</section>
+</main>
+<footer><div class="wrap">Freelancer Itaúna · Conectando pessoas e serviços</div></footer>
+</body>
+  </html>
