@@ -159,7 +159,41 @@ app.post("/login", async (req, res) => {
   }
 });
   
-const PORT = process.env.PORT || 3000;
+
+app.get("/servicos", async (req, res) => {
+  try {
+    const resultado = await pool.query(
+      `SELECT
+        id,
+        professional_id,
+        category_id,
+        title,
+        description,
+        price,
+        city,
+        state,
+        status,
+        created_at
+       FROM services
+       WHERE status = 'active'
+       ORDER BY created_at DESC
+       LIMIT 100`
+    );
+
+    return res.json({
+      sucesso: true,
+      total: resultado.rows.length,
+      servicos: resultado.rows
+    });
+  } catch (error) {
+    console.error("Erro ao consultar serviços:", error);
+
+    return res.status(500).json({
+      erro: "Não foi possível consultar os serviços."
+    });
+  }
+});
+    const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
