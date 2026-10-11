@@ -101,6 +101,63 @@ app.post("/cadastro", async (req, res) => {
     });
   }
 });
+
+// Login de usuários
+app.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        erro: "Informe email e senha."
+      });
+    }
+
+    const emailNormalizado = email.trim().toLowerCase();
+
+    const resultado = await pool.query(
+      `SELECT id, name, email, password_hash, role
+       FROM users
+       WHERE email = $1`,
+      [emailNormalizado]
+    );
+
+    if (resultado.rows.length === 0) {
+      return res.status(401).json({
+        erro: "Email ou senha inválidos."
+      });
+    }
+
+    const usuario = resultado.rows[0];
+
+    const senhaCorreta = await bcrypt.compare(
+      password,
+      usuario.password_hash
+    );
+
+    if (!senhaCorreta) {
+      return res.status(401).json({
+        erro: "Email ou senha inválidos."
+      });
+    }
+
+    return res.json({
+      mensagem: "Login realizado com sucesso.",
+      usuario: {
+        id: usuario.id,
+        name: usuario.name,
+        email: usuario.email,
+        role: usuario.role
+      }
+    });
+  } catch (error) {
+    console.error("Erro no login:", error);
+
+    return res.status(500).json({
+      erro: "Não foi possível realizar o login."
+    });
+  }
+});
   
 const PORT = process.env.PORT || 3000;
 
