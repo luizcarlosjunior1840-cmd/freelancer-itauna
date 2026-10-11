@@ -41,6 +41,67 @@ app.get("/teste-neon", async (req, res) => {
   }
 });
 
+const bcrypt = require("bcryptjs");
+
+// Cadastro de usuários
+app.post("/cadastro", async (req, res) => {
+  try {
+    const { name, email, password, role } = req.body;
+
+    if (!name || !email || !password || !role) {
+      return res.status(400).json({
+        erro: "Informe nome, email, senha e tipo de usuário."
+      });
+    }
+
+    const tiposPermitidos = [
+      "client",
+      "professional",
+      "company"
+    ];
+
+    if (!tiposPermitidos.includes(role)) {
+      return res.status(400).json({
+        erro: "Tipo de usuário inválido."
+      });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({
+        erro: "A senha deve ter pelo menos 8 caracteres."
+      });
+    }
+
+    const emailNormalizado = email.trim().toLowerCase();
+
+    const senhaHash = await bcrypt.hash(password, 12);
+
+    const resultado = await pool.query(
+      `INSERT INTO users (name, email, password_hash, role)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id, name, email, role`,
+      [name.trim(), emailNormalizado, senhaHash, role]
+    );
+
+    return res.status(201).json({
+      mensagem: "Cadastro realizado com sucesso.",
+      usuario: resultado.rows[0]
+    });
+  } catch (error) {
+    if (error.code === "23505") {
+      return res.status(409).json({
+        erro: "Este email já está cadastrado."
+      });
+    }
+
+    console.error("Erro no cadastro:", error);
+
+    return res.status(500).json({
+      erro: "Não foi possível realizar o cadastro."
+    });
+  }
+});
+  
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
