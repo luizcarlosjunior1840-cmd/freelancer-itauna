@@ -4,6 +4,7 @@ const cors = require("cors");
 require("dotenv").config();
 
 const { Pool } = require("pg");
+const jwt = require("jsonwebtoken");
 
 const app = express();
 
