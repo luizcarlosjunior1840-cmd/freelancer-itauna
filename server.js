@@ -136,13 +136,22 @@ app.post("/login", async (req, res) => {
       usuario.password_hash
     );
 
-    if (!senhaCorreta) {
-      return res.status(401).json({
-        erro: "Email ou senha inválidos."
-      });
-    }
+    
+if (!senhaCorreta) {
+  return res.status(401).json({
+    erro: "Email ou senha inválidos."
+  });
+}
+
+const token = jwt.sign(
+  { id: usuario.id, role: usuario.role },
+  process.env.JWT_SECRET,
+  { expiresIn: "7d" }
+);
+    
 
     return res.json({
+      token,
       mensagem: "Login realizado com sucesso.",
       usuario: {
         id: usuario.id,
