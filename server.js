@@ -274,6 +274,119 @@ app.get("/perfil-profissional", async (req, res) => {
   }
 });
 
+function autenticarToken(req, res, next) {
+  const cabecalho = req.headers.authorization;
+
+  if (!cabecalho || !cabecalho.startsWith("Bearer ")) {
+    return res.status(401).json({
+      erro: "Token de acesso não informado."
+    });
+  }
+
+  const token = cabecalho.slice(7);
+
+  try {
+    req.usuario = jwt.verify(token, process.env.JWT_SECRET);
+
+    return next();
+  } catch (error) {
+    return res.status(401).json({
+      erro: "Token inválido ou expirado."
+    });
+  }
+}
+
+function somenteAdmin(req, res, next) {
+  if (!req.usuario || req.usuario.role !== "admin") {
+    return res.status(403).json({
+      erro: "Acesso permitido somente ao administrador."
+    });
+  }
+
+  return next();
+}
+
+// Listar cadastros pendentes
+app.get(
+  "/admin/usuarios-pendentes",
+  autenticarToken,
+  somenteAdmin,
+  async (req, res) => {
+    try {
+      const resultado = await pool.query(
+        `SELECT id, name, email, role, approval_status, is_active,
+                created_at
+         FROM users
+         WHERE approval_status = 'pending'
+           AND role <> 'admin'
+         ORDER BY created_at ASC`
+      );
+
+      return res.json({
+        total: resultado.rows.length,
+        usuarios: resultado.rows
+      });
+    } catch (error) {
+      console.error("Erro ao listar pendentes:", error);
+
+      return res.status(500).json({
+        erro: "Não foi possível listar os cadastros."
+      });
+    }
+  }
+);
+
+// Aprovar ou rejeitar um cadastro
+app.patch(
+  "/admin/usuarios/:id/aprovacao",
+  autenticarToken,
+  somenteAdmin,
+  async (req, res) => {
+    try {
+      const { status } = req.body;
+      const id = req.params.id;
+
+      if (!["approved", "rejected"].includes(status)) {
+        return res.status(400).json({
+          erro: "Status deve ser approved ou rejected."
+        });
+      }
+
+      const resultado = await pool.query(
+        `UPDATE users
+         SET approval_status = $1,
+             is_active = $2,
+             updated_at = NOW()
+         WHERE id = $3
+           AND role <> 'admin'
+           AND approval_status = 'pending'
+         RETURNING id, name, email, role,
+                   approval_status, is_active`,
+        [status, status === "approved", id]
+      );
+
+      if (resultado.rows.length === 0) {
+        return res.status(404).json({
+          erro: "Cadastro pendente não encontrado."
+        });
+      }
+
+      return res.json({
+        mensagem: status === "approved"
+          ? "Cadastro aprovado com sucesso."
+          : "Cadastro rejeitado.",
+        usuario: resultado.rows[0]
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar aprovação:", error);
+
+      return res.status(500).json({
+        erro: "Não foi possível atualizar o cadastro."
+      });
+    }
+  }
+);
+        
 /* Cadastro inicial e protegido do administrador */
 app.get("/configurar-admin", (req, res) => {
   res.send(`
