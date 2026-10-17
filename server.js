@@ -105,23 +105,35 @@ return res.status(201).json({
 });
 
 // Login de usuários
+
 app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
+    if (
+      typeof email !== "string" ||
+      typeof password !== "string" ||
+      !email.trim() ||
+      !password
+    ) {
       return res.status(400).json({
         erro: "Informe email e senha."
       });
     }
 
-    const emailNormalizado = email.trim().toLowerCase();
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({
+        erro: "Serviço temporariamente indisponível."
+      });
+    }
 
     const resultado = await pool.query(
-      `SELECT id, name, email, password_hash, role
+      `SELECT id, name, email, password_hash, role,
+              approval_status, is_active
        FROM users
-       WHERE email = $1`,
-      [emailNormalizado]
+       WHERE email = $1
+       LIMIT 1`,
+      [email.trim().toLowerCase()]
     );
 
     if (resultado.rows.length === 0) {
@@ -137,19 +149,31 @@ app.post("/login", async (req, res) => {
       usuario.password_hash
     );
 
-    
-if (!senhaCorreta) {
-  return res.status(401).json({
-    erro: "Email ou senha inválidos."
-  });
-}
+    if (!senhaCorreta) {
+      return res.status(401).json({
+        erro: "Email ou senha inválidos."
+      });
+    }
 
-const token = jwt.sign(
-  { id: usuario.id, role: usuario.role },
-  process.env.JWT_SECRET,
-  { expiresIn: "7d" }
-);
-    
+    if (
+      usuario.is_active !== true ||
+      (
+        usuario.role !== "admin" &&
+        usuario.approval_status !== "approved"
+      )
+    ) {
+      return res.status(403).json({
+        erro: usuario.approval_status === "rejected"
+          ? "Seu cadastro não foi aprovado."
+          : "Seu cadastro aguarda aprovação do administrador."
+      });
+    }
+
+    const token = jwt.sign(
+      { id: usuario.id, role: usuario.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
 
     return res.json({
       token,
@@ -158,7 +182,8 @@ const token = jwt.sign(
         id: usuario.id,
         name: usuario.name,
         email: usuario.email,
-        role: usuario.role
+        role: usuario.role,
+        approval_status: usuario.approval_status
       }
     });
   } catch (error) {
@@ -170,7 +195,6 @@ const token = jwt.sign(
   }
 });
   
-
 app.get("/servicos", async (req, res) => {
   try {
     const resultado = await pool.query(
