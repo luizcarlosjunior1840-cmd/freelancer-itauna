@@ -78,16 +78,17 @@ app.post("/cadastro", async (req, res) => {
     const senhaHash = await bcrypt.hash(password, 12);
 
     const resultado = await pool.query(
-      `INSERT INTO users (name, email, password_hash, role)
-       VALUES ($1, $2, $3, $4)
-       RETURNING id, name, email, role`,
-      [name.trim(), emailNormalizado, senhaHash, role]
-    );
+  `INSERT INTO users
+   (name, email, password_hash, role, approval_status, is_active)
+   VALUES ($1, $2, $3, $4, 'pending', false)
+   RETURNING id, name, email, role, approval_status, is_active`,
+  [name.trim(), emailNormalizado, senhaHash, role]
+);
 
-    return res.status(201).json({
-      mensagem: "Cadastro realizado com sucesso.",
-      usuario: resultado.rows[0]
-    });
+return res.status(201).json({
+  mensagem: "Cadastro recebido. Aguarde a aprovação do administrador.",
+  usuario: resultado.rows[0]
+});
   } catch (error) {
     if (error.code === "23505") {
       return res.status(409).json({
