@@ -249,6 +249,98 @@ app.get("/perfil-profissional", async (req, res) => {
   }
 });
 
+/* Cadastro inicial e protegido do administrador */
+app.get("/configurar-admin", (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <title>Criar administrador</title>
+    <body style="font-family:Arial;max-width:420px;margin:30px auto;padding:16px">
+      <h2>Freelancer Itaúna — Criar ADM</h2>
+      <form id="form">
+        <p>Chave de configuração (NEW_SECRET)</p>
+        <input id="chave" type="password" required style="width:100%;padding:10px">
+        <p>Nome</p>
+        <input id="nome" required style="width:100%;padding:10px">
+        <p>E-mail do administrador</p>
+        <input id="email" type="email" required style="width:100%;padding:10px">
+        <p>Senha do administrador (mínimo 8 caracteres)</p>
+        <input id="senha" type="password" minlength="8" required style="width:100%;padding:10px">
+        <p><button style="padding:12px">Criar administrador</button></p>
+      </form>
+      <pre id="resultado"></pre>
+      <script>
+        document.getElementById("form").onsubmit = async function(e) {
+          e.preventDefault();
+          const r = await fetch("/admin/bootstrap", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-bootstrap-secret": document.getElementById("chave").value
+            },
+            body: JSON.stringify({
+              name: document.getElementById("nome").value,
+              email: document.getElementById("email").value,
+              password: document.getElementById("senha").value
+            })
+          });
+          document.getElementById("resultado").textContent =
+            await r.text();
+        };
+      </script>
+    </body>
+    </html>
+  `);
+});
+
+app.post("/admin/bootstrap", async (req, res) => {
+  try {
+    if (!process.env.NEW_SECRET ||
+        req.get("x-bootstrap-secret") !== process.env.NEW_SECRET) {
+      return res.status(403).json({ erro: "Chave inválida." });
+    }
+
+    const existentes = await pool.query(
+      "SELECT id FROM users WHERE role = 'admin' LIMIT 1"
+    );
+    if (existentes.rows.length > 0) {
+      return res.status(409).json({
+        erro: "Já existe um administrador. Cadastro inicial bloqueado."
+      });
+    }
+
+    const { name, email, password } = req.body;
+    if (!name || !email || !password || password.length < 8) {
+      return res.status(400).json({
+        erro: "Informe nome, e-mail e senha com pelo menos 8 caracteres."
+      });
+    }
+
+    const hash = await bcrypt.hash(password, 12);
+    const resultado = await pool.query(
+      `INSERT INTO users (name, email, password_hash, role, is_active)
+       VALUES ($1, $2, $3, 'admin', true)
+       RETURNING id, name, email, role`,
+      [name.trim(), email.trim().toLowerCase(), hash]
+    );
+
+    return res.status(201).json({
+      mensagem: "Administrador criado com sucesso.",
+      usuario: resultado.rows[0]
+    });
+  } catch (error) {
+    if (error.code === "23505") {
+      return res.status(409).json({ erro: "Este e-mail já está cadastrado." });
+    }
+    console.error("Erro ao criar administrador:", error);
+    return res.status(500).json({
+      erro: "Não foi possível criar o administrador."
+    });
+  }
+});
+      
     const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
