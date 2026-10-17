@@ -340,7 +340,53 @@ app.post("/admin/bootstrap", async (req, res) => {
     });
   }
 });
-      
+    
+/* Recuperação temporária da senha do administrador */
+app.post("/admin/redefinir-senha", async (req, res) => {
+  try {
+    if (
+      !process.env.NEW_SECRET ||
+      req.get("x-bootstrap-secret") !== process.env.NEW_SECRET
+    ) {
+      return res.status(403).json({ erro: "Chave inválida." });
+    }
+
+    const { email, password } = req.body;
+
+    if (!email || !password || password.length < 8) {
+      return res.status(400).json({
+        erro: "Informe o e-mail e uma senha com pelo menos 8 caracteres."
+      });
+    }
+
+    const hash = await bcrypt.hash(password, 12);
+
+    const resultado = await pool.query(
+      `UPDATE users
+       SET password_hash = $1
+       WHERE email = $2 AND role = 'admin'
+       RETURNING id, name, email, role`,
+      [hash, email.trim().toLowerCase()]
+    );
+
+    if (resultado.rows.length === 0) {
+      return res.status(404).json({
+        erro: "Conta administradora não encontrada."
+      });
+    }
+
+    return res.json({
+      mensagem: "Senha do administrador redefinida com sucesso.",
+      usuario: resultado.rows[0]
+    });
+  } catch (error) {
+    console.error("Erro ao redefinir senha:", error);
+    return res.status(500).json({
+      erro: "Não foi possível redefinir a senha."
+    });
+  }
+});
+
     const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
