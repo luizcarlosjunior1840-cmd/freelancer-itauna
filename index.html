@@ -6,144 +6,160 @@
 <meta name="theme-color" content="#123b2a">
 <title>Freelancer Itaúna</title>
 <style>
-*{box-sizing:border-box}
-body{margin:0;font-family:Arial,sans-serif;color:#183126;background:#f5f7f5}
-header{background:#123b2a;color:white;padding:20px 16px}
-.wrap{max-width:900px;margin:auto}
-.brand{font-size:23px;font-weight:800}
-.brand span{color:#9ee6b0}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;color:#183126;background:#f5f7f5}
+header,footer{background:#123b2a;color:white;padding:20px 16px}.wrap{max-width:900px;margin:auto}
+.brand{font-size:23px;font-weight:800}.brand span{color:#9ee6b0}
 .hero{padding:48px 18px 35px;text-align:center;background:#e6f4e9}
-h1{font-size:clamp(30px,7vw,46px);margin:0 0 16px;line-height:1.12}
-p{line-height:1.6}
-.hero p{max-width:580px;margin:0 auto 24px}
-.actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+h1{font-size:clamp(30px,7vw,46px);margin:0 0 16px;line-height:1.12}p{line-height:1.6}
+.hero p{max-width:580px;margin:0 auto 24px}.actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
 a.btn,button{display:inline-block;border:0;border-radius:9px;padding:14px 18px;font-size:16px;font-weight:bold;text-decoration:none;cursor:pointer}
-.primary{background:#176b43;color:white}
-.secondary{background:white;color:#176b43;border:1px solid #176b43!important}
-section{padding:28px 16px}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
-.card{background:white;padding:22px;border-radius:14px;border:1px solid #e0e8e1}
-.card h2{margin-top:0}
-.note{font-size:14px;color:#53665a}
-footer{text-align:center;padding:24px;background:#123b2a;color:white}
+button:disabled{opacity:.6;cursor:wait}.primary{background:#176b43;color:white}
+.secondary{background:white;color:#176b43;border:1px solid #176b43!important}.danger{background:#a92e2e;color:white}
+section{padding:28px 16px}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.card,.panel{background:white;padding:22px;border-radius:14px;border:1px solid #e0e8e1;margin-bottom:16px}
+.card h2{margin-top:0}.note{font-size:14px;color:#53665a}
+input,select{width:100%;padding:12px;margin:6px 0;border:1px solid #ccd8ce;border-radius:6px;font-size:16px}
+.status{padding:12px;background:#eef5ef;border-radius:8px;overflow-wrap:anywhere}.hidden{display:none!important}
+.user{border:1px solid #dce5dd;border-radius:10px;padding:14px;margin:12px 0}.user h3{margin-top:0}
+.user button{margin-right:8px;margin-bottom:6px}
 </style>
 </head>
 <body>
 <header><div class="wrap brand">Freelancer <span>Itaúna</span></div></header>
 <main>
-<div class="hero">
-<div class="wrap">
+<div class="hero"><div class="wrap">
 <h1>Encontre o profissional certo em Itaúna</h1>
 <p>Conectamos clientes a profissionais e prestadores de serviços da nossa cidade. Encontre ajuda para seu próximo projeto ou divulgue seu trabalho.</p>
-<div class="actions">
-<a class="btn primary" href="#clientes">Quero contratar</a>
-<a class="btn secondary" href="#profissionais">Sou profissional</a>
-</div>
-</div>
-</div>
+<div class="actions"><a class="btn primary" href="#clientes">Quero contratar</a><a class="btn secondary" href="#profissionais">Sou profissional</a></div>
+</div></div>
 <section class="wrap">
 <h2>Como podemos ajudar?</h2>
 <div class="cards">
-<article class="card" id="clientes">
-<h2>Para clientes</h2>
-<p>Encontre profissionais para serviços, reparos e projetos em Itaúna.</p>
-<a class="btn primary" href="mailto:contato@freelanceritauna.com?subject=Quero%20contratar%20um%20profissional">Tenho um serviço</a>
-</article>
-<article class="card" id="profissionais">
-<h2>Para profissionais</h2>
-<p>Prepare-se para divulgar seus serviços e receber oportunidades de trabalho.</p>
-<a class="btn secondary" href="mailto:contato@freelanceritauna.com?subject=Quero%20me%20cadastrar%20como%20profissional">Quero participar</a>
-</article>
+<article class="card" id="clientes"><h2>Para clientes</h2><p>Encontre profissionais para serviços, reparos e projetos em Itaúna.</p><a class="btn primary" href="#acesso">Tenho um serviço</a></article>
+<article class="card" id="profissionais"><h2>Para profissionais</h2><p>Prepare-se para divulgar seus serviços e receber oportunidades de trabalho.</p><a class="btn secondary" href="#acesso">Quero participar</a></article>
 </div>
-<p class="note">Versão inicial de apresentação. Os cadastros ainda precisam ser conectados ao sistema.</p>
+<p class="note">Cadastros sujeitos à aprovação da administração.</p>
 </section>
+<section id="acesso" class="wrap">
+<div class="panel"><h2>Crie sua conta</h2>
+<form id="formCadastro">
+<input name="name" placeholder="Nome completo" autocomplete="name" required>
+<input name="email" type="email" placeholder="Seu e-mail" autocomplete="email" required>
+<input name="password" type="password" placeholder="Senha (mínimo 8 caracteres)" minlength="8" autocomplete="new-password" required>
+<select name="role" required><option value="client">Sou cliente</option><option value="professional">Sou profissional</option><option value="company">Sou empresa</option></select>
+<button class="primary" type="submit">Criar minha conta</button>
+</form><p id="resultadoCadastro" class="status" role="status" aria-live="polite"></p>
+</div>
+<div class="panel"><h2>Já tenho uma conta</h2>
+<form id="formLogin">
+<input name="email" type="email" placeholder="Seu e-mail" autocomplete="username" required>
+<input name="password" type="password" placeholder="Sua senha" autocomplete="current-password" required>
+<button class="primary" type="submit">Entrar</button>
+</form><p id="resultadoLogin" class="status" role="status" aria-live="polite"></p>
+</div>
+</section>
+<section id="painelAdmin" class="wrap hidden"><div class="panel">
+<h2>Painel administrativo</h2><p id="adminIdentidade">Área de administração.</p>
+<div class="actions" style="justify-content:flex-start"><button id="btnAtualizar" class="primary" type="button">Atualizar cadastros</button><button id="btnSair" class="secondary" type="button">Sair</button></div>
+<p id="resultadoAdmin" class="status" role="status" aria-live="polite"></p><div id="listaPendentes"></div>
+</div></section>
 </main>
 <footer><div class="wrap">Freelancer Itaúna · Conectando pessoas e serviços</div></footer>
-
-
-
-
-<section id="acesso" style="max-width:600px;margin:30px auto;padding:20px;background:#f4f7f8;border-radius:12px">
-  <h2>Entre no Freelancer Itaúna</h2>
-
-  <h3>Criar conta</h3>
-  <form id="formCadastro">
-    <input name="name" placeholder="Nome completo" required style="width:100%;padding:12px;margin:6px 0">
-    <input name="email" type="email" placeholder="Seu e-mail" required style="width:100%;padding:12px;margin:6px 0">
-    <input name="password" type="password" placeholder="Senha (mínimo 8 caracteres)" minlength="8" required style="width:100%;padding:12px;margin:6px 0">
-    <select name="role" required style="width:100%;padding:12px;margin:6px 0">
-      <option value="client">Sou cliente</option>
-      <option value="professional">Sou profissional</option>
-      <option value="company">Sou empresa</option>
-    </select>
-    <button type="submit" style="width:100%;padding:14px;background:#176b43;color:white;border:0;border-radius:6px;margin-top:8px">Criar minha conta</button>
-  </form>
-
-  <p id="resultadoCadastro" role="status"></p>
-
-  <hr>
-
-  <h3>Já tenho uma conta</h3>
-  <form id="formLogin">
-    <input name="email" type="email" placeholder="Seu e-mail" required style="width:100%;padding:12px;margin:6px 0">
-    <input name="password" type="password" placeholder="Sua senha" required style="width:100%;padding:12px;margin:6px 0">
-    <button type="submit" style="width:100%;padding:14px;background:#123b2a;color:white;border:0;border-radius:6px;margin-top:8px">Entrar</button>
-  </form>
-
-  <p id="resultadoLogin" role="status"></p>
-</section>
-
 <script>
-const API = "https://freelancer-itauna.onrender.com";
+"use strict";
+const API="https://freelancer-itauna.onrender.com";
+const $=id=>document.getElementById(id);
 
-async function enviarFormulario(event, rota, resultadoId) {
-  event.preventDefault();
-
-  const formulario = event.target;
-  const resultado = document.getElementById(resultadoId);
-  const dados = Object.fromEntries(new FormData(formulario));
-
-  resultado.textContent = "Aguarde...";
-
-  try {
-    const resposta = await fetch(API + rota, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(dados)
-    });
-
-    const dadosResposta = await resposta.json();
-
-    if (!resposta.ok) {
-      throw new Error(dadosResposta.erro || "Não foi possível concluir.");
-    }
-
-    if (rota === "/cadastro") {
-      resultado.textContent =
-        dadosResposta.mensagem || "Cadastro realizado!";
-      formulario.reset();
-    } else {
-      resultado.textContent =
-        "Bem-vindo, " +
-        (dadosResposta.usuario?.name || "usuário") +
-        "! Login realizado com sucesso.";
-      formulario.reset();
-    }
-  } catch (erro) {
-    resultado.textContent =
-      erro.message || "Falha na conexão. Tente novamente.";
-  }
+async function requisicao(rota,opcoes={}){
+ const headers={...(opcoes.headers||{})};
+ if(opcoes.body) headers["Content-Type"]="application/json";
+ const token=sessionStorage.getItem("freelancer_token");
+ if(token) headers.Authorization="Bearer "+token;
+ const resposta=await fetch(API+rota,{...opcoes,headers});
+ const dados=await resposta.json().catch(()=>({}));
+ if(!resposta.ok) throw new Error(dados.erro||dados.mensagem||`A solicitação falhou (${resposta.status}).`);
+ return dados;
 }
 
-document.getElementById("formCadastro").addEventListener(
-  "submit",
-  event => enviarFormulario(event, "/cadastro", "resultadoCadastro")
-);
+async function enviarFormulario(event,rota,resultadoId){
+ event.preventDefault();
+ const formulario=event.currentTarget,resultado=$(resultadoId),botao=formulario.querySelector('button[type="submit"]');
+ botao.disabled=true;resultado.textContent="Aguarde...";
+ try{
+  const dados=Object.fromEntries(new FormData(formulario));
+  const retorno=await requisicao(rota,{method:"POST",body:JSON.stringify(dados)});
+  if(rota==="/cadastro"){
+   resultado.textContent=retorno.mensagem||"Cadastro enviado. Aguarde a aprovação da administração.";
+   formulario.reset();return;
+  }
+  if(!retorno.token||!retorno.usuario) throw new Error("O servidor não retornou o token e os dados esperados. Confira a rota /login.");
+  sessionStorage.setItem("freelancer_token",retorno.token);
+  formulario.reset();
+  resultado.textContent=`Bem-vindo, ${retorno.usuario.name||"usuário"}! Login realizado com sucesso.`;
+  if(retorno.usuario.role==="admin"){
+   $("painelAdmin").classList.remove("hidden");
+   $("adminIdentidade").textContent="Administrador: "+(retorno.usuario.name||retorno.usuario.email||"");
+   $("painelAdmin").scrollIntoView({behavior:"smooth"});
+   await carregarPendentes();
+  }else{$("painelAdmin").classList.add("hidden");}
+ }catch(erro){resultado.textContent=erro.message||"Falha na conexão. Tente novamente.";}
+ finally{botao.disabled=false;}
+}
 
-document.getElementById("formLogin").addEventListener(
-  "submit",
-  event => enviarFormulario(event, "/login", "resultadoLogin")
-);
+function obterLista(dados){
+ if(Array.isArray(dados)) return dados;
+ if(Array.isArray(dados.usuarios)) return dados.usuarios;
+ if(Array.isArray(dados.pendentes)) return dados.pendentes;
+ return null;
+}
+
+async function carregarPendentes(){
+ $("resultadoAdmin").textContent="Carregando cadastros pendentes...";
+ $("listaPendentes").replaceChildren();$("btnAtualizar").disabled=true;
+ try{
+  const dados=await requisicao("/admin/usuarios-pendentes");
+  const usuarios=obterLista(dados);
+  if(!usuarios) throw new Error("A rota respondeu, mas o formato da lista não é o esperado. Precisamos conferir o server.js.");
+  if(!usuarios.length){$("resultadoAdmin").textContent="Nenhum cadastro pendente encontrado.";return;}
+  $("resultadoAdmin").textContent=`Cadastros pendentes: ${usuarios.length}`;
+  usuarios.forEach(usuario=>{
+   const card=document.createElement("article");card.className="user";
+   const nome=document.createElement("h3");nome.textContent=usuario.name||"Nome não informado";
+   const email=document.createElement("p");email.textContent="E-mail: "+(usuario.email||"Não informado");
+   const tipo=document.createElement("p");tipo.textContent="Tipo de conta: "+(usuario.role||"Não informado");
+   const aprovar=document.createElement("button");aprovar.type="button";aprovar.className="primary";aprovar.textContent="Aprovar";
+   const rejeitar=document.createElement("button");rejeitar.type="button";rejeitar.className="danger";rejeitar.textContent="Rejeitar";
+   aprovar.addEventListener("click",()=>decidirCadastro(usuario.id,"approved",aprovar,rejeitar));
+   rejeitar.addEventListener("click",()=>decidirCadastro(usuario.id,"rejected",rejeitar,aprovar));
+   card.append(nome,email,tipo,aprovar,rejeitar);$("listaPendentes").append(card);
+  });
+ }catch(erro){$("resultadoAdmin").textContent="Erro ao carregar pendências: "+erro.message;}
+ finally{$("btnAtualizar").disabled=false;}
+}
+
+async function decidirCadastro(id,status,botao,outroBotao){
+ if(!id){$("resultadoAdmin").textContent="Cadastro sem identificador. Nenhuma alteração foi feita.";return;}
+ const acao=status==="approved"?"aprovar":"rejeitar";
+ if(!window.confirm(`Confirma ${acao} este cadastro?`)) return;
+ botao.disabled=true;outroBotao.disabled=true;
+ try{
+  const retorno=await requisicao("/admin/usuarios/"+encodeURIComponent(id)+"/aprovacao",{method:"PATCH",body:JSON.stringify({status})});
+  $("resultadoAdmin").textContent=retorno.mensagem||`Cadastro ${status==="approved"?"aprovado":"rejeitado"}.`;
+  await carregarPendentes();
+ }catch(erro){$("resultadoAdmin").textContent="Não foi possível atualizar: "+erro.message;botao.disabled=false;outroBotao.disabled=false;}
+}
+
+$("formCadastro").addEventListener("submit",event=>enviarFormulario(event,"/cadastro","resultadoCadastro"));
+$("formLogin").addEventListener("submit",event=>enviarFormulario(event,"/login","resultadoLogin"));
+$("btnAtualizar").addEventListener("click",carregarPendentes);
+$("btnSair").addEventListener("click",()=>{
+ sessionStorage.removeItem("freelancer_token");
+ $("painelAdmin").classList.add("hidden");
+ $("resultadoLogin").textContent="Você saiu da sessão.";
+ $("resultadoAdmin").textContent="";$("listaPendentes").replaceChildren();
+ window.scrollTo({top:0,behavior:"smooth"});
+});
 </script>
 </body>
   </html>
+  
