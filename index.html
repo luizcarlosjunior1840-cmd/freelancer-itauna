@@ -1,165 +1,33 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#123b2a">
-<title>Freelancer Itaúna</title>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#123b2a"><title>Freelancer Itaúna</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;color:#183126;background:#f5f7f5}
-header,footer{background:#123b2a;color:white;padding:20px 16px}.wrap{max-width:900px;margin:auto}
-.brand{font-size:23px;font-weight:800}.brand span{color:#9ee6b0}
-.hero{padding:48px 18px 35px;text-align:center;background:#e6f4e9}
-h1{font-size:clamp(30px,7vw,46px);margin:0 0 16px;line-height:1.12}p{line-height:1.6}
-.hero p{max-width:580px;margin:0 auto 24px}.actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-a.btn,button{display:inline-block;border:0;border-radius:9px;padding:14px 18px;font-size:16px;font-weight:bold;text-decoration:none;cursor:pointer}
-button:disabled{opacity:.6;cursor:wait}.primary{background:#176b43;color:white}
-.secondary{background:white;color:#176b43;border:1px solid #176b43!important}.danger{background:#a92e2e;color:white}
-section{padding:28px 16px}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
-.card,.panel{background:white;padding:22px;border-radius:14px;border:1px solid #e0e8e1;margin-bottom:16px}
-.card h2{margin-top:0}.note{font-size:14px;color:#53665a}
-input,select{width:100%;padding:12px;margin:6px 0;border:1px solid #ccd8ce;border-radius:6px;font-size:16px}
-.status{padding:12px;background:#eef5ef;border-radius:8px;overflow-wrap:anywhere}.hidden{display:none!important}
-.user{border:1px solid #dce5dd;border-radius:10px;padding:14px;margin:12px 0}.user h3{margin-top:0}
-.user button{margin-right:8px;margin-bottom:6px}
-</style>
-</head>
-<body>
-<header><div class="wrap brand">Freelancer <span>Itaúna</span></div></header>
-<main>
-<div class="hero"><div class="wrap">
-<h1>Encontre o profissional certo em Itaúna</h1>
-<p>Conectamos clientes a profissionais e prestadores de serviços da nossa cidade. Encontre ajuda para seu próximo projeto ou divulgue seu trabalho.</p>
-<div class="actions"><a class="btn primary" href="#clientes">Quero contratar</a><a class="btn secondary" href="#profissionais">Sou profissional</a></div>
-</div></div>
-<section class="wrap">
-<h2>Como podemos ajudar?</h2>
-<div class="cards">
-<article class="card" id="clientes"><h2>Para clientes</h2><p>Encontre profissionais para serviços, reparos e projetos em Itaúna.</p><a class="btn primary" href="#acesso">Tenho um serviço</a></article>
-<article class="card" id="profissionais"><h2>Para profissionais</h2><p>Prepare-se para divulgar seus serviços e receber oportunidades de trabalho.</p><a class="btn secondary" href="#acesso">Quero participar</a></article>
-</div>
-<p class="note">Cadastros sujeitos à aprovação da administração.</p>
-</section>
-<section id="acesso" class="wrap">
-<div class="panel"><h2>Crie sua conta</h2>
-<form id="formCadastro">
-<input name="name" placeholder="Nome completo" autocomplete="name" required>
-<input name="email" type="email" placeholder="Seu e-mail" autocomplete="email" required>
-<input name="password" type="password" placeholder="Senha (mínimo 8 caracteres)" minlength="8" autocomplete="new-password" required>
-<select name="role" required><option value="client">Sou cliente</option><option value="professional">Sou profissional</option><option value="company">Sou empresa</option></select>
-<button class="primary" type="submit">Criar minha conta</button>
-</form><p id="resultadoCadastro" class="status" role="status" aria-live="polite"></p>
-</div>
-<div class="panel"><h2>Já tenho uma conta</h2>
-<form id="formLogin">
-<input name="email" type="email" placeholder="Seu e-mail" autocomplete="username" required>
-<input name="password" type="password" placeholder="Sua senha" autocomplete="current-password" required>
-<button class="primary" type="submit">Entrar</button>
-</form><p id="resultadoLogin" class="status" role="status" aria-live="polite"></p>
-</div>
-</section>
-<section id="painelAdmin" class="wrap hidden"><div class="panel">
-<h2>Painel administrativo</h2><p id="adminIdentidade">Área de administração.</p>
-<div class="actions" style="justify-content:flex-start"><button id="btnAtualizar" class="primary" type="button">Atualizar cadastros</button><button id="btnSair" class="secondary" type="button">Sair</button></div>
-<p id="resultadoAdmin" class="status" role="status" aria-live="polite"></p><div id="listaPendentes"></div>
-</div></section>
-</main>
-<footer><div class="wrap">Freelancer Itaúna · Conectando pessoas e serviços</div></footer>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;color:#183126;background:#f5f7f5}header,footer{background:#123b2a;color:white;padding:18px 16px}.wrap{max-width:960px;margin:auto}.brand{font-size:23px;font-weight:800}.brand span{color:#9ee6b0}.hero{padding:42px 18px 32px;text-align:center;background:#e6f4e9}h1{font-size:clamp(30px,7vw,46px);margin:0 0 14px;line-height:1.12}p{line-height:1.55}.hero p{max-width:620px;margin:0 auto 22px}.actions,.nav{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.center{justify-content:center}a.btn,button{display:inline-block;border:0;border-radius:9px;padding:13px 16px;font-size:16px;font-weight:bold;text-decoration:none;cursor:pointer}button:disabled{opacity:.6;cursor:wait}.primary{background:#176b43;color:white}.secondary{background:white;color:#176b43;border:1px solid #176b43!important}.danger{background:#a92e2e;color:white}section{padding:26px 16px}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}.card,.panel{background:white;padding:20px;border-radius:14px;border:1px solid #e0e8e1;margin-bottom:15px}.note,.small{font-size:14px;color:#53665a}input,select,textarea{width:100%;padding:12px;margin:6px 0 12px;border:1px solid #ccd8ce;border-radius:7px;font-size:16px;background:#fff;color:#183126}textarea{min-height:90px;resize:vertical}label{display:block;font-weight:700;margin-top:7px}.status{padding:12px;background:#eef5ef;border-radius:8px;overflow-wrap:anywhere;white-space:pre-wrap}.hidden{display:none!important}.user,.service{border:1px solid #dce5dd;border-radius:10px;padding:14px;margin:12px 0;background:#fff}.user h3,.service h3{margin-top:0}.user button{margin-right:8px;margin-bottom:6px}.nav{margin:14px 0}.nav button{font-size:14px;padding:10px 12px}.price{font-size:20px;font-weight:bold;color:#176b43}
+</style></head><body>
+<header><div class="wrap brand">Freelancer <span>Itaúna</span></div></header><main>
+<div class="hero"><div class="wrap"><h1>Encontre o profissional certo em Itaúna</h1><p>Conectamos clientes a profissionais e prestadores de serviços da nossa cidade.</p><div class="actions center"><a class="btn primary" href="#acesso">Quero contratar</a><a class="btn secondary" href="#acesso" onclick="document.getElementById('roleCadastro').value='professional'">Sou profissional</a></div></div></div>
+<section class="wrap"><div class="cards"><article class="card"><h2>Para clientes</h2><p>Consulte serviços disponíveis.</p><a class="btn primary" href="#servicosPublicos">Ver serviços</a></article><article class="card"><h2>Para profissionais</h2><p>Crie seu perfil e divulgue seu trabalho.</p><a class="btn secondary" href="#acesso" onclick="document.getElementById('roleCadastro').value='professional'">Quero participar</a></article><article class="card"><h2>Para empresas</h2><p>Cadastre sua empresa e publique serviços.</p><a class="btn secondary" href="#acesso" onclick="document.getElementById('roleCadastro').value='company'">Cadastrar empresa</a></article></div><p class="note">Cadastros sujeitos à aprovação da administração.</p></section>
+<section id="acesso" class="wrap"><div class="panel"><h2>Crie sua conta</h2><form id="formCadastro"><label>Nome completo ou nome da empresa</label><input name="name" autocomplete="name" minlength="2" required><label>E-mail</label><input name="email" type="email" autocomplete="email" required><label>Senha (mínimo 8 caracteres)</label><input name="password" type="password" minlength="8" autocomplete="new-password" required><label>Tipo de conta</label><select name="role" id="roleCadastro" required><option value="client">Sou cliente</option><option value="professional">Sou profissional</option><option value="company">Sou empresa</option></select><button class="primary" type="submit">Criar minha conta</button></form><p id="resultadoCadastro" class="status" role="status">Preencha os campos para criar sua conta.</p></div>
+<div class="panel"><h2>Já tenho uma conta</h2><form id="formLogin"><label>E-mail</label><input name="email" type="email" autocomplete="username" required><label>Senha</label><input name="password" type="password" autocomplete="current-password" required><button class="primary" type="submit">Entrar</button></form><p id="resultadoLogin" class="status" role="status">Entre para abrir o painel da sua conta.</p></div></section>
+<section id="painelUsuario" class="wrap hidden"><div class="panel"><h2 id="tituloPainel">Meu painel</h2><p id="identidadeUsuario"></p><p id="statusConta" class="status"></p><div class="nav"><button class="secondary" data-tela="inicioPainel">Início</button><button class="secondary" data-tela="perfilPainel" id="navPerfil">Meu perfil</button><button class="secondary" data-tela="servicoPainel" id="navCadastrarServico">Cadastrar serviço</button><button class="secondary" data-tela="listaServicosPainel">Ver serviços</button><button class="secondary" id="btnSair">Sair da conta</button></div><p id="mensagemPainel" class="status" role="status"></p>
+<div id="inicioPainel" class="telaPainel"><h3>Bem-vindo ao seu painel</h3><p>Use os botões acima para acessar as opções disponíveis para sua conta.</p></div>
+<div id="perfilPainel" class="telaPainel hidden"><h3>Meu perfil profissional / empresa</h3><p class="note">Preencha e salve. Usa a rota /perfil-profissional existente no servidor.</p><form id="formPerfil"><label>Profissão ou atividade principal</label><input name="profession" id="profession" required placeholder="Ex.: Eletricista"><label>Descrição</label><textarea name="description" id="description" placeholder="Conte sobre seu trabalho"></textarea><label>Experiência</label><input name="experience" id="experience" placeholder="Ex.: 5 anos"><label>Valor por hora (opcional)</label><input name="hourly_rate" id="hourly_rate" type="number" min="0" step="0.01"><label>Disponibilidade</label><input name="availability" id="availability"><label>Endereço ou região atendida</label><input name="address" id="address"><button class="primary" type="submit">Salvar perfil</button></form></div>
+<div id="servicoPainel" class="telaPainel hidden"><h3>Cadastrar serviço</h3><p class="note">A categoria precisa ser um UUID de uma categoria existente no Neon. Não invente esse identificador.</p><form id="formServico"><label>Título do serviço</label><input name="title" minlength="3" required><label>Descrição</label><textarea name="description" required></textarea><label>Preço (R$)</label><input name="price" type="number" min="0" step="0.01" required><label>Cidade</label><input name="city" value="Itaúna" required><label>Estado (sigla)</label><input name="state" value="MG" maxlength="2" required><label>ID da categoria existente no Neon (UUID)</label><input name="category_id" required placeholder="UUID real da categoria"><button class="primary" type="submit">Cadastrar serviço</button></form></div>
+<div id="listaServicosPainel" class="telaPainel hidden"><h3>Serviços disponíveis</h3><form id="formBuscaServicos"><label>Filtrar por cidade</label><input name="city" value="Itaúna"><button class="primary" type="submit">Buscar serviços</button></form><div id="listaServicos"></div></div></div></section>
+<section id="painelAdmin" class="wrap hidden"><div class="panel"><h2>Painel administrativo</h2><p id="adminIdentidade"></p><button id="btnAtualizar" class="primary" type="button">Atualizar cadastros pendentes</button><p id="resultadoAdmin" class="status" role="status"></p><div id="listaPendentes"></div></div></section>
+<section id="servicosPublicos" class="wrap"><div class="panel"><h2>Serviços disponíveis</h2><p>Consulte os serviços publicados.</p><form id="formBuscaPublica"><label>Cidade</label><input name="city" value="Itaúna"><button class="primary" type="submit">Buscar serviços</button></form><div id="listaPublica"></div><p id="resultadoPublico" class="status">Carregando serviços...</p></div></section></main><footer><div class="wrap">Freelancer Itaúna · Conectando pessoas e serviços</div></footer>
 <script>
-"use strict";
-const API="https://freelancer-itauna.onrender.com";
-const $=id=>document.getElementById(id);
-
-async function requisicao(rota,opcoes={}){
- const headers={...(opcoes.headers||{})};
- if(opcoes.body) headers["Content-Type"]="application/json";
- const token=sessionStorage.getItem("freelancer_token");
- if(token) headers.Authorization="Bearer "+token;
- const resposta=await fetch(API+rota,{...opcoes,headers});
- const dados=await resposta.json().catch(()=>({}));
- if(!resposta.ok) throw new Error(dados.erro||dados.mensagem||`A solicitação falhou (${resposta.status}).`);
- return dados;
-}
-
-async function enviarFormulario(event,rota,resultadoId){
- event.preventDefault();
- const formulario=event.currentTarget,resultado=$(resultadoId),botao=formulario.querySelector('button[type="submit"]');
- botao.disabled=true;resultado.textContent="Aguarde...";
- try{
-  const dados=Object.fromEntries(new FormData(formulario));
-  const retorno=await requisicao(rota,{method:"POST",body:JSON.stringify(dados)});
-  if(rota==="/cadastro"){
-   resultado.textContent=retorno.mensagem||"Cadastro enviado. Aguarde a aprovação da administração.";
-   formulario.reset();return;
-  }
-  if(!retorno.token||!retorno.usuario) throw new Error("O servidor não retornou o token e os dados esperados. Confira a rota /login.");
-  sessionStorage.setItem("freelancer_token",retorno.token);
-  formulario.reset();
-  resultado.textContent=`Bem-vindo, ${retorno.usuario.name||"usuário"}! Login realizado com sucesso.`;
-  if(retorno.usuario.role==="admin"){
-   $("painelAdmin").classList.remove("hidden");
-   $("adminIdentidade").textContent="Administrador: "+(retorno.usuario.name||retorno.usuario.email||"");
-   $("painelAdmin").scrollIntoView({behavior:"smooth"});
-   await carregarPendentes();
-  }else{$("painelAdmin").classList.add("hidden");}
- }catch(erro){resultado.textContent=erro.message||"Falha na conexão. Tente novamente.";}
- finally{botao.disabled=false;}
-}
-
-function obterLista(dados){
- if(Array.isArray(dados)) return dados;
- if(Array.isArray(dados.usuarios)) return dados.usuarios;
- if(Array.isArray(dados.pendentes)) return dados.pendentes;
- return null;
-}
-
-async function carregarPendentes(){
- $("resultadoAdmin").textContent="Carregando cadastros pendentes...";
- $("listaPendentes").replaceChildren();$("btnAtualizar").disabled=true;
- try{
-  const dados=await requisicao("/admin/usuarios-pendentes");
-  const usuarios=obterLista(dados);
-  if(!usuarios) throw new Error("A rota respondeu, mas o formato da lista não é o esperado. Precisamos conferir o server.js.");
-  if(!usuarios.length){$("resultadoAdmin").textContent="Nenhum cadastro pendente encontrado.";return;}
-  $("resultadoAdmin").textContent=`Cadastros pendentes: ${usuarios.length}`;
-  usuarios.forEach(usuario=>{
-   const card=document.createElement("article");card.className="user";
-   const nome=document.createElement("h3");nome.textContent=usuario.name||"Nome não informado";
-   const email=document.createElement("p");email.textContent="E-mail: "+(usuario.email||"Não informado");
-   const tipo=document.createElement("p");tipo.textContent="Tipo de conta: "+(usuario.role||"Não informado");
-   const aprovar=document.createElement("button");aprovar.type="button";aprovar.className="primary";aprovar.textContent="Aprovar";
-   const rejeitar=document.createElement("button");rejeitar.type="button";rejeitar.className="danger";rejeitar.textContent="Rejeitar";
-   aprovar.addEventListener("click",()=>decidirCadastro(usuario.id,"approved",aprovar,rejeitar));
-   rejeitar.addEventListener("click",()=>decidirCadastro(usuario.id,"rejected",rejeitar,aprovar));
-   card.append(nome,email,tipo,aprovar,rejeitar);$("listaPendentes").append(card);
-  });
- }catch(erro){$("resultadoAdmin").textContent="Erro ao carregar pendências: "+erro.message;}
- finally{$("btnAtualizar").disabled=false;}
-}
-
-async function decidirCadastro(id,status,botao,outroBotao){
- if(!id){$("resultadoAdmin").textContent="Cadastro sem identificador. Nenhuma alteração foi feita.";return;}
- const acao=status==="approved"?"aprovar":"rejeitar";
- if(!window.confirm(`Confirma ${acao} este cadastro?`)) return;
- botao.disabled=true;outroBotao.disabled=true;
- try{
-  const retorno=await requisicao("/admin/usuarios/"+encodeURIComponent(id)+"/aprovacao",{method:"PATCH",body:JSON.stringify({status})});
-  $("resultadoAdmin").textContent=retorno.mensagem||`Cadastro ${status==="approved"?"aprovado":"rejeitado"}.`;
-  await carregarPendentes();
- }catch(erro){$("resultadoAdmin").textContent="Não foi possível atualizar: "+erro.message;botao.disabled=false;outroBotao.disabled=false;}
-}
-
-$("formCadastro").addEventListener("submit",event=>enviarFormulario(event,"/cadastro","resultadoCadastro"));
-$("formLogin").addEventListener("submit",event=>enviarFormulario(event,"/login","resultadoLogin"));
-$("btnAtualizar").addEventListener("click",carregarPendentes);
-$("btnSair").addEventListener("click",()=>{
- sessionStorage.removeItem("freelancer_token");
- $("painelAdmin").classList.add("hidden");
- $("resultadoLogin").textContent="Você saiu da sessão.";
- $("resultadoAdmin").textContent="";$("listaPendentes").replaceChildren();
- window.scrollTo({top:0,behavior:"smooth"});
-});
-</script>
-</body>
-  </html>
-  
+"use strict";const API="https://freelancer-itauna.onrender.com";const $=id=>document.getElementById(id);let usuarioAtual=null;
+async function requisicao(rota,opcoes={}){const headers={...(opcoes.headers||{})};if(opcoes.body)headers["Content-Type"]="application/json";const token=sessionStorage.getItem("freelancer_token");if(token)headers.Authorization="Bearer "+token;const resposta=await fetch(API+rota,{...opcoes,headers});const dados=await resposta.json().catch(()=>({}));if(!resposta.ok)throw new Error(dados.mensagem||dados.erro||`Solicitação falhou (${resposta.status}).`);return dados}
+function msg(id,texto){$(id).textContent=texto}function esconderTelas(){document.querySelectorAll(".telaPainel").forEach(el=>el.classList.add("hidden"))}function abrirTela(id){esconderTelas();$(id).classList.remove("hidden");if(id==="perfilPainel")carregarPerfil();if(id==="listaServicosPainel")carregarServicos("listaServicos",$("formBuscaServicos").elements.city.value)}function papel(r){return({client:"Cliente",professional:"Profissional",company:"Empresa",admin:"Administrador"})[r]||r||"Conta"}
+function configurarPainel(u){usuarioAtual=u;$("painelUsuario").classList.remove("hidden");$("tituloPainel").textContent="Painel do "+papel(u.role).toLowerCase();$("identidadeUsuario").textContent=(u.name||"Usuário")+" · "+(u.email||"");msg("statusConta","Conta aprovada. Tipo de conta: "+papel(u.role)+".");const profissional=["professional","company","admin"].includes(u.role);$("navPerfil").classList.toggle("hidden",!profissional);$("navCadastrarServico").classList.toggle("hidden",!profissional);if(u.role==="admin"){$("painelAdmin").classList.remove("hidden");$("adminIdentidade").textContent="Administrador: "+(u.name||u.email||"");carregarPendentes()}else $("painelAdmin").classList.add("hidden");abrirTela("inicioPainel");$("painelUsuario").scrollIntoView({behavior:"smooth"})}
+async function enviarFormulario(e,rota,id){e.preventDefault();const f=e.currentTarget,b=f.querySelector('button[type="submit"]');b.disabled=true;msg(id,"Aguarde...");try{const dados=Object.fromEntries(new FormData(f));const r=await requisicao(rota,{method:"POST",body:JSON.stringify(dados)});if(rota==="/cadastro"){msg(id,r.mensagem||"Cadastro enviado. Aguarde aprovação.");f.reset();return}if(!r.token||!r.usuario)throw new Error("O servidor não retornou token e usuário. Confira /login.");sessionStorage.setItem("freelancer_token",r.token);f.reset();msg(id,`Bem-vindo, ${r.usuario.name||"usuário"}! Login realizado com sucesso.`);configurarPainel(r.usuario)}catch(e){msg(id,e.message||"Falha na conexão. Tente novamente.")}finally{b.disabled=false}}
+async function carregarPerfil(){if(!usuarioAtual||!["professional","company","admin"].includes(usuarioAtual.role))return;msg("mensagemPainel","Carregando perfil...");try{const r=await requisicao("/perfil-profissional");const p=r.perfil||{};["profession","description","experience","hourly_rate","availability","address"].forEach(k=>$(k).value=p[k]??"");msg("mensagemPainel",r.mensagem||"Perfil carregado. Preencha e salve as alterações.")}catch(e){msg("mensagemPainel","Não foi possível carregar o perfil: "+e.message)}}
+$("formPerfil").addEventListener("submit",async e=>{e.preventDefault();const b=e.currentTarget.querySelector("button");b.disabled=true;try{const d=Object.fromEntries(new FormData(e.currentTarget));if(d.hourly_rate==="")d.hourly_rate=null;const r=await requisicao("/perfil-profissional",{method:"PUT",body:JSON.stringify(d)});msg("mensagemPainel",r.mensagem||"Perfil salvo.")}catch(err){msg("mensagemPainel","Erro ao salvar perfil: "+err.message)}finally{b.disabled=false}});
+$("formServico").addEventListener("submit",async e=>{e.preventDefault();const f=e.currentTarget,b=f.querySelector("button");b.disabled=true;try{const d=Object.fromEntries(new FormData(f));d.price=Number(d.price);d.state=d.state.trim().toUpperCase();const r=await requisicao("/servicos",{method:"POST",body:JSON.stringify(d)});msg("mensagemPainel",r.mensagem||"Serviço cadastrado.");f.reset();f.elements.city.value="Itaúna";f.elements.state.value="MG"}catch(err){msg("mensagemPainel","Erro ao cadastrar serviço: "+err.message)}finally{b.disabled=false}});
+function obterLista(d){if(Array.isArray(d))return d;if(Array.isArray(d.usuarios))return d.usuarios;if(Array.isArray(d.servicos))return d.servicos;if(Array.isArray(d.pendentes))return d.pendentes;return null}function desenharServicos(destino,lista){const area=$(destino);area.replaceChildren();if(!lista.length){area.textContent="Nenhum serviço encontrado.";return}lista.forEach(s=>{const c=document.createElement("article");c.className="service";const h=document.createElement("h3");h.textContent=s.title||"Serviço";const d=document.createElement("p");d.textContent=s.description||"Sem descrição.";const n=document.createElement("p");n.textContent="Profissional: "+(s.professional_name||"Não informado");const l=document.createElement("p");l.textContent="Local: "+[s.city,s.state].filter(Boolean).join(" / ");const p=document.createElement("p");p.className="price";p.textContent=s.price==null?"Consulte o preço":"R$ "+Number(s.price).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});c.append(h,d,n,l,p);area.append(c)})}
+async function carregarServicos(destino,cidade=""){ $(destino).textContent="Carregando serviços...";try{const r=await requisicao("/servicos"+(cidade?"?city="+encodeURIComponent(cidade):""));const lista=obterLista(r);if(!lista)throw new Error("Formato inesperado ao consultar serviços.");desenharServicos(destino,lista);if(destino==="listaPublica")msg("resultadoPublico",`Serviços encontrados: ${lista.length}`)}catch(e){$(destino).textContent="Não foi possível carregar serviços: "+e.message;if(destino==="listaPublica")msg("resultadoPublico","Confira a conexão e tente novamente.")}}
+$("formBuscaServicos").addEventListener("submit",e=>{e.preventDefault();carregarServicos("listaServicos",e.currentTarget.elements.city.value)});$("formBuscaPublica").addEventListener("submit",e=>{e.preventDefault();carregarServicos("listaPublica",e.currentTarget.elements.city.value)});
+async function carregarPendentes(){msg("resultadoAdmin","Carregando cadastros pendentes...");$("listaPendentes").replaceChildren();$("btnAtualizar").disabled=true;try{const r=await requisicao("/admin/usuarios-pendentes");const lista=obterLista(r);if(!lista)throw new Error("Formato da lista não reconhecido.");if(!lista.length){msg("resultadoAdmin","Nenhum cadastro pendente encontrado.");return}msg("resultadoAdmin",`Cadastros pendentes: ${lista.length}`);lista.forEach(u=>{const c=document.createElement("article");c.className="user";const h=document.createElement("h3");h.textContent=u.name||"Nome não informado";const em=document.createElement("p");em.textContent="E-mail: "+(u.email||"Não informado");const t=document.createElement("p");t.textContent="Tipo: "+papel(u.role);const a=document.createElement("button");a.className="primary";a.type="button";a.textContent="Aprovar";const x=document.createElement("button");x.className="danger";x.type="button";x.textContent="Rejeitar";a.addEventListener("click",()=>decidir(u.id,"approved",a,x));x.addEventListener("click",()=>decidir(u.id,"rejected",x,a));c.append(h,em,t,a,x);$("listaPendentes").append(c)})}catch(e){msg("resultadoAdmin","Erro ao carregar pendências: "+e.message)}finally{$("btnAtualizar").disabled=false}}
+async function decidir(id,status,b,outro){if(!id){msg("resultadoAdmin","Cadastro sem identificador.");return}if(!confirm(`Confirma ${status==="approved"?"aprovar":"rejeitar"} este cadastro?`))return;b.disabled=true;outro.disabled=true;try{const r=await requisicao("/admin/usuarios/"+encodeURIComponent(id)+"/aprovacao",{method:"PATCH",body:JSON.stringify({status})});msg("resultadoAdmin",r.mensagem||"Status atualizado.");await carregarPendentes()}catch(e){msg("resultadoAdmin","Não foi possível atualizar: "+e.message);b.disabled=false;outro.disabled=false}}
+$("formCadastro").addEventListener("submit",e=>enviarFormulario(e,"/cadastro","resultadoCadastro"));$("formLogin").addEventListener("submit",e=>enviarFormulario(e,"/login","resultadoLogin"));$("btnAtualizar").addEventListener("click",carregarPendentes);document.querySelectorAll("[data-tela]").forEach(b=>b.addEventListener("click",()=>abrirTela(b.dataset.tela)));$("btnSair").addEventListener("click",()=>{sessionStorage.removeItem("freelancer_token");usuarioAtual=null;$("painelUsuario").classList.add("hidden");$("painelAdmin").classList.add("hidden");msg("resultadoLogin","Você saiu da sessão.");window.scrollTo({top:0,behavior:"smooth"})});carregarServicos("listaPublica","Itaúna");
+</script></body></html>
