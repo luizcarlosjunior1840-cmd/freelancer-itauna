@@ -1,130 +1,215 @@
-const express = require("express");
-const path = require("path");
-const cors = require("cors");
-require("dotenv").config();
 
+const express = require("express");
 const { Pool } = require("pg");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 const app = express();
+app.use(express.json({ limit: "1mb" }));
 
-app.use(cors());
-app.use(express.json());
-app.use(express.static(__dirname));
+const PORT = process.env.PORT || 3000;
+const DATABASE_URL = process.env.DATABASE_URL;
+const JWT_SECRET = process.env.JWT_SECRET;
+const NEW_SECRET = process.env.NEW_SECRET;
+
+if (!DATABASE_URL) {
+  console.error("ERRO: configure a variável DATABASE_URL.");
+}
+
+if (!JWT_SECRET) {
+  console.error("ERRO: configure a variável JWT_SECRET.");
+}
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
+  connectionString: DATABASE_URL,
+  ssl: DATABASE_URL && !/localhost|127\.0\.0\.1/i.test(DATABASE_URL)
+    ? { rejectUnauthorized: false }
+    : false,
+  connectionTimeoutMillis: 10000,
+  idleTimeoutMillis: 30000,
+});
+
+function erro(res, status, mensagem) {
+  return res.status(status).json({ sucesso: false, mensagem });
+}
+
+function texto(valor) {
+  return typeof valor === "string" ? valor.trim() : "";
+}
+
+function emailValido(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function criarToken(usuario) {
+  if (!JWT_SECRET) {
+    throw new Error("JWT_SECRET não configurado.");
   }
-});
 
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
-});
+  return jwt.sign(
+    { id: usuario.id },
+    JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+}
 
-app.get("/teste-neon", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT NOW()");
+function autenticarToken(req, res, next) {
+  const cabecalho = req.headers.authorization || "";
+  const partes = cabecalho.split(" ");
 
-    res.json({
-      conectado: true,
-      banco: "Neon",
-      horario: result.rows[0].now
-    });
-  } catch (error) {
-    console.error(error);
-
-    res.status(500).json({
-      conectado: false,
-      erro: "Não foi possível conectar ao Neon."
-    });
+  if (partes.length !== 2 || partes[0] !== "Bearer") {
+    return erro(res, 401, "Token não informado.");
   }
-});
 
-const bcrypt = require("bcryptjs");
+  if (!JWT_SECRET) {
+    return erro(res, 500, "JWT_SECRET não configurado.");
+  }
 
-// Cadastro de usuários
-app.post("/cadastro", async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    req.token = jwt.verify(partes[1], JWT_SECRET);
+    next();
+  } catch {
+    return erro(res, 401, "Token inválido ou expirado.");
+  }
+}
 
-    if (!name || !email || !password || !role) {
-      return res.status(400).json({
-        erro: "Informe nome, email, senha e tipo de usuário."
-      });
-    }
-
-    const tiposPermitidos = [
-      "client",
-      "professional",
-      "company"
-    ];
-
-    if (!tiposPermitidos.includes(role)) {
-      return res.status(400).json({
-        erro: "Tipo de usuário inválido."
-      });
-    }
-
-    if (password.length < 8) {
-      return res.status(400).json({
-        erro: "A senha deve ter pelo menos 8 caracteres."
-      });
-    }
-
-    const emailNormalizado = email.trim().toLowerCase();
-
-    const senhaHash = await bcrypt.hash(password, 12);
-
+async function buscarUsuarioAutenticado(req, res, next) {
+  try {
     const resultado = await pool.query(
-  `INSERT INTO users
-   (name, email, password_hash, role, approval_status, is_active)
-   VALUES ($1, $2, $3, $4, 'pending', false)
-   RETURNING id, name, email, role, approval_status, is_active`,
-  [name.trim(), emailNormalizado, senhaHash, role]
-);
+      `SELECT id, name, email, role, approval_status, is_active
+       FROM users
+       WHERE id = $1
+       LIMIT 1`,
+      [req.token.id]
+    );
 
-return res.status(201).json({
-  mensagem: "Cadastro recebido. Aguarde a aprovação do administrador.",
-  usuario: resultado.rows[0]
-});
-  } catch (error) {
-    if (error.code === "23505") {
-      return res.status(409).json({
-        erro: "Este email já está cadastrado."
-      });
+    if (resultado.rows.length === 0) {
+      return erro(res, 401, "Usuário não encontrado.");
     }
 
-    console.error("Erro no cadastro:", error);
+    const usuario = resultado.rows[0];
 
-    return res.status(500).json({
-      erro: "Não foi possível realizar o cadastro."
-    });
-  }
-});
-
-// Login de usuários
-
-app.post("/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
+    if (usuario.is_active === false) {
+      return erro(res, 403, "Esta conta está desativada.");
+    }
 
     if (
-      typeof email !== "string" ||
-      typeof password !== "string" ||
-      !email.trim() ||
-      !password
+      usuario.role !== "admin" &&
+      usuario.approval_status !== "approved"
     ) {
-      return res.status(400).json({
-        erro: "Informe email e senha."
-      });
+      return erro(res, 403, "Sua conta ainda não foi aprovada.");
     }
 
-    if (!process.env.JWT_SECRET) {
-      return res.status(500).json({
-        erro: "Serviço temporariamente indisponível."
-      });
+    req.usuario = usuario;
+    next();
+  } catch (e) {
+    next(e);
+  }
+}
+
+function somenteAdmin(req, res, next) {
+  if (!req.usuario || req.usuario.role !== "admin") {
+    return erro(res, 403, "Acesso permitido somente ao administrador.");
+  }
+
+  next();
+}
+
+app.get("/", (req, res) => {
+  res.json({
+    sucesso: true,
+    mensagem: "API Freelancer Itaúna funcionando.",
+  });
+});
+
+app.get("/saude", (req, res) => {
+  res.json({ sucesso: true, status: "online" });
+});
+
+app.get("/teste-neon", async (req, res, next) => {
+  try {
+    const resultado = await pool.query(
+      "SELECT NOW() AS horario"
+    );
+
+    res.json({
+      sucesso: true,
+      mensagem: "Conexão com Neon funcionando.",
+      horario: resultado.rows[0].horario,
+    });
+  } catch (e) {
+    next(e);
+  }
+});
+
+// CADASTRO
+app.post("/cadastro", async (req, res, next) => {
+  try {
+    const nome = texto(req.body.name || req.body.nome);
+    const email = texto(req.body.email).toLowerCase();
+    const senha = req.body.password || req.body.senha;
+    const papel = texto(req.body.role || req.body.tipo || "client");
+
+    const papeisPermitidos = ["client", "professional", "company"];
+
+    if (nome.length < 2) {
+      return erro(res, 400, "Informe seu nome completo.");
+    }
+
+    if (!emailValido(email)) {
+      return erro(res, 400, "Informe um e-mail válido.");
+    }
+
+    if (typeof senha !== "string" || senha.length < 8) {
+      return erro(res, 400, "A senha deve ter pelo menos 8 caracteres.");
+    }
+
+    if (!papeisPermitidos.includes(papel)) {
+      return erro(res, 400, "Tipo de conta inválido.");
+    }
+
+    const existente = await pool.query(
+      "SELECT id FROM users WHERE email = $1 LIMIT 1",
+      [email]
+    );
+
+    if (existente.rows.length > 0) {
+      return erro(res, 409, "Este e-mail já está cadastrado.");
+    }
+
+    const senhaHash = await bcrypt.hash(senha, 12);
+
+    const resultado = await pool.query(
+      `INSERT INTO users
+       (name, email, password_hash, role, approval_status, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id, name, email, role, approval_status, is_active, created_at`,
+      [nome, email, senhaHash, papel, "pending", true]
+    );
+
+    const usuario = resultado.rows[0];
+
+    res.status(201).json({
+      sucesso: true,
+      mensagem: "Cadastro realizado. Aguarde a aprovação da conta.",
+      usuario,
+    });
+  } catch (e) {
+    if (e.code === "23505") {
+      return erro(res, 409, "Este e-mail já está cadastrado.");
+    }
+    next(e);
+  }
+});
+
+// LOGIN
+app.post("/login", async (req, res, next) => {
+  try {
+    const email = texto(req.body.email).toLowerCase();
+    const senha = req.body.password || req.body.senha;
+
+    if (!emailValido(email) || typeof senha !== "string") {
+      return erro(res, 400, "Informe o e-mail e a senha.");
     }
 
     const resultado = await pool.query(
@@ -133,432 +218,634 @@ app.post("/login", async (req, res) => {
        FROM users
        WHERE email = $1
        LIMIT 1`,
-      [email.trim().toLowerCase()]
+      [email]
     );
 
     if (resultado.rows.length === 0) {
-      return res.status(401).json({
-        erro: "Email ou senha inválidos."
-      });
+      return erro(res, 401, "E-mail ou senha incorretos.");
     }
 
     const usuario = resultado.rows[0];
-
     const senhaCorreta = await bcrypt.compare(
-      password,
+      senha,
       usuario.password_hash
     );
 
     if (!senhaCorreta) {
-      return res.status(401).json({
-        erro: "Email ou senha inválidos."
-      });
+      return erro(res, 401, "E-mail ou senha incorretos.");
+    }
+
+    if (usuario.is_active === false) {
+      return erro(res, 403, "Sua conta está desativada.");
     }
 
     if (
-      usuario.is_active !== true ||
-      (
-        usuario.role !== "admin" &&
-        usuario.approval_status !== "approved"
-      )
+      usuario.role !== "admin" &&
+      usuario.approval_status !== "approved"
     ) {
       return res.status(403).json({
-        erro: usuario.approval_status === "rejected"
-          ? "Seu cadastro não foi aprovado."
-          : "Seu cadastro aguarda aprovação do administrador."
+        sucesso: false,
+        mensagem: "Sua conta ainda não foi aprovada.",
+        status: usuario.approval_status,
       });
     }
 
-    const token = jwt.sign(
-      { id: usuario.id, role: usuario.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+    const token = criarToken(usuario);
 
-    return res.json({
-      token,
+    res.json({
+      sucesso: true,
       mensagem: "Login realizado com sucesso.",
+      token,
       usuario: {
         id: usuario.id,
         name: usuario.name,
         email: usuario.email,
         role: usuario.role,
-        approval_status: usuario.approval_status
-      }
+        approval_status: usuario.approval_status,
+      },
     });
-  } catch (error) {
-    console.error("Erro no login:", error);
-
-    return res.status(500).json({
-      erro: "Não foi possível realizar o login."
-    });
+  } catch (e) {
+    next(e);
   }
 });
-  
-app.get("/servicos", async (req, res) => {
+
+// LISTAR SERVIÇOS
+app.get("/servicos", async (req, res, next) => {
   try {
+    const cidade = texto(req.query.city || req.query.cidade);
+    const categoriaId = texto(req.query.category_id);
+    const valores = [];
+    const filtros = ["s.status = 'active'"];
+
+    if (cidade) {
+      valores.push(`%${cidade}%`);
+      filtros.push(
+        `LOWER(s.city) LIKE LOWER($${valores.length})`
+      );
+    }
+
+    if (categoriaId) {
+      const id = Number(categoriaId);
+
+      if (!Number.isInteger(id) || id <= 0) {
+        return erro(res, 400, "Categoria inválida.");
+      }
+
+      valores.push(id);
+      filtros.push(`s.category_id = $${valores.length}`);
+    }
+
     const resultado = await pool.query(
-      `SELECT
-        id,
-        professional_id,
-        category_id,
-        title,
-        description,
-        price,
-        city,
-        state,
-        status,
-        created_at
-       FROM services
-       WHERE status = 'active'
-       ORDER BY created_at DESC
-       LIMIT 100`
+      `SELECT s.id, s.professional_id, s.category_id,
+              s.title, s.description, s.price, s.city, s.state,
+              s.status, s.created_at,
+              u.name AS professional_name
+       FROM services s
+       JOIN users u ON u.id = s.professional_id
+       WHERE ${filtros.join(" AND ")}
+         AND u.is_active = TRUE
+         AND u.approval_status = 'approved'
+       ORDER BY s.created_at DESC
+       LIMIT 100`,
+      valores
     );
 
-    return res.json({
+    res.json({
       sucesso: true,
       total: resultado.rows.length,
-      servicos: resultado.rows
+      servicos: resultado.rows,
     });
-  } catch (error) {
-    console.error("Erro ao consultar serviços:", error);
-
-    return res.status(500).json({
-      erro: "Não foi possível consultar os serviços."
-    });
+  } catch (e) {
+    next(e);
   }
 });
 
-
-
-app.get(
-  "/perfil-profissional",
+// CADASTRAR UM SERVIÇO
+app.post(
+  "/servicos",
   autenticarToken,
-  async (req, res) => {
+  buscarUsuarioAutenticado,
+  async (req, res, next) => {
     try {
-      // Busca o usuário autenticado no banco para validar
-      // a situação atual da conta.
-      const usuarioResult = await pool.query(
-        `SELECT id, name, role, approval_status, is_active
-         FROM users
-         WHERE id = $1
-         LIMIT 1`,
-        [req.usuario.id]
-      );
-
-      if (usuarioResult.rows.length === 0) {
-        return res.status(401).json({
-          sucesso: false,
-          erro: "Usuário não encontrado."
-        });
+      if (
+        !["professional", "company", "admin"].includes(req.usuario.role)
+      ) {
+        return erro(
+          res,
+          403,
+          "Somente profissionais ou empresas podem cadastrar serviços."
+        );
       }
 
-      const usuario = usuarioResult.rows[0];
+      const titulo = texto(req.body.title || req.body.titulo);
+      const descricao = texto(
+        req.body.description || req.body.descricao
+      );
+      const cidade = texto(req.body.city || req.body.cidade);
+      const estado = texto(req.body.state || req.body.estado);
+      const categoriaId = Number(
+        req.body.category_id || req.body.categoria_id
+      );
+      const preco = Number(req.body.price || req.body.preco);
 
-      if (
-        usuario.role !== "professional" ||
-        usuario.approval_status !== "approved" ||
-        usuario.is_active !== true
-      ) {
-        return res.status(403).json({
-          sucesso: false,
-          erro: "Acesso permitido somente a profissionais aprovados e ativos."
-        });
+      if (titulo.length < 3) {
+        return erro(res, 400, "Informe o título do serviço.");
+      }
+
+      if (!descricao) {
+        return erro(res, 400, "Informe a descrição do serviço.");
+      }
+
+      if (!cidade || !estado) {
+        return erro(res, 400, "Informe cidade e estado.");
+      }
+
+      if (!Number.isInteger(categoriaId) || categoriaId <= 0) {
+        return erro(res, 400, "Informe uma categoria válida.");
+      }
+
+      if (!Number.isFinite(preco) || preco < 0) {
+        return erro(res, 400, "Informe um preço válido.");
       }
 
       const resultado = await pool.query(
-        `SELECT
-           u.id AS user_id,
-           u.name,
-           u.role,
-           pp.id AS perfil_id,
-           pp.profession,
-           pp.description,
-           pp.experience,
-           pp.hourly_rate,
-           pp.availability,
-           pp.address,
-           pp.rating,
-           pp.total_reviews
-         FROM users AS u
-         LEFT JOIN professional_profiles AS pp
-           ON pp.user_id = u.id
-         WHERE u.id = $1
-         LIMIT 1`,
-        [usuario.id]
+        `INSERT INTO services
+         (professional_id, category_id, title, description,
+          price, city, state, status)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         RETURNING *`,
+        [
+          req.usuario.id,
+          categoriaId,
+          titulo,
+          descricao,
+          preco,
+          cidade,
+          estado,
+          "active",
+        ]
       );
 
-      return res.json({
+      res.status(201).json({
         sucesso: true,
-        perfil: resultado.rows[0]
+        mensagem: "Serviço cadastrado com sucesso.",
+        servico: resultado.rows[0],
       });
-    } catch (error) {
-      console.error("Erro ao consultar perfil profissional:", error);
-
-      return res.status(500).json({
-        sucesso: false,
-        erro: "Não foi possível consultar o perfil profissional."
-      });
+    } catch (e) {
+      next(e);
     }
   }
 );
-      
 
-function autenticarToken(req, res, next) {
-  const cabecalho = req.headers.authorization;
+// PERFIL PROFISSIONAL
+app.get(
+  "/perfil-profissional/:id?",
+  autenticarToken,
+  buscarUsuarioAutenticado,
+  async (req, res, next) => {
+    try {
+      const idSolicitado = req.params.id
+        ? Number(req.params.id)
+        : Number(req.usuario.id);
 
-  if (!cabecalho || !cabecalho.startsWith("Bearer ")) {
-    return res.status(401).json({
-      erro: "Token de acesso não informado."
-    });
+      if (!Number.isInteger(idSolicitado) || idSolicitado <= 0) {
+        return erro(res, 400, "ID de usuário inválido.");
+      }
+
+      if (
+        idSolicitado !== Number(req.usuario.id) &&
+        req.usuario.role !== "admin"
+      ) {
+        return erro(
+          res,
+          403,
+          "Você só pode consultar seu próprio perfil."
+        );
+      }
+
+      const resultado = await pool.query(
+        `SELECT user_id, profession, description, experience,
+                hourly_rate, availability, address, rating, total_reviews
+         FROM professional_profiles
+         WHERE user_id = $1
+         LIMIT 1`,
+        [idSolicitado]
+      );
+
+      if (resultado.rows.length === 0) {
+        return res.json({
+          sucesso: true,
+          mensagem: "Perfil profissional ainda não cadastrado.",
+          perfil: null,
+        });
+      }
+
+      res.json({
+        sucesso: true,
+        perfil: resultado.rows[0],
+      });
+    } catch (e) {
+      next(e);
+    }
   }
+);
 
-  const token = cabecalho.slice(7);
+app.put(
+  "/perfil-profissional",
+  autenticarToken,
+  buscarUsuarioAutenticado,
+  async (req, res, next) => {
+    try {
+      if (
+        !["professional", "company", "admin"].includes(req.usuario.role)
+      ) {
+        return erro(
+          res,
+          403,
+          "Esta conta não pode editar perfil profissional."
+        );
+      }
 
-  try {
-    req.usuario = jwt.verify(token, process.env.JWT_SECRET);
+      const profissao = texto(
+        req.body.profession || req.body.profissao
+      );
+      const descricao = texto(
+        req.body.description || req.body.descricao
+      );
+      const experiencia = texto(
+        req.body.experience || req.body.experiencia
+      );
+      const disponibilidade = texto(req.body.availability);
+      const endereco = texto(req.body.address);
+      const valorHora = req.body.hourly_rate == null
+        ? null
+        : Number(req.body.hourly_rate);
 
-    return next();
-  } catch (error) {
-    return res.status(401).json({
-      erro: "Token inválido ou expirado."
-    });
+      if (!profissao) {
+        return erro(res, 400, "Informe sua profissão.");
+      }
+
+      if (
+        valorHora !== null &&
+        (!Number.isFinite(valorHora) || valorHora < 0)
+      ) {
+        return erro(res, 400, "Valor por hora inválido.");
+      }
+
+      const resultado = await pool.query(
+        `INSERT INTO professional_profiles
+         (user_id, profession, description, experience,
+          hourly_rate, availability, address)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         ON CONFLICT (user_id)
+         DO UPDATE SET
+           profession = EXCLUDED.profession,
+           description = EXCLUDED.description,
+           experience = EXCLUDED.experience,
+           hourly_rate = EXCLUDED.hourly_rate,
+           availability = EXCLUDED.availability,
+           address = EXCLUDED.address
+         RETURNING *`,
+        [
+          req.usuario.id,
+          profissao,
+          descricao,
+          experiencia,
+          valorHora,
+          disponibilidade,
+          endereco,
+        ]
+      );
+
+      res.json({
+        sucesso: true,
+        mensagem: "Perfil profissional atualizado.",
+        perfil: resultado.rows[0],
+      });
+    } catch (e) {
+      next(e);
+    }
   }
-}
+);
 
-function somenteAdmin(req, res, next) {
-  if (!req.usuario || req.usuario.role !== "admin") {
-    return res.status(403).json({
-      erro: "Acesso permitido somente ao administrador."
-    });
-  }
-
-  return next();
-}
-
-// Listar cadastros pendentes
+// ADMIN: LISTAR USUÁRIOS PENDENTES
 app.get(
   "/admin/usuarios-pendentes",
   autenticarToken,
+  buscarUsuarioAutenticado,
   somenteAdmin,
-  async (req, res) => {
+  async (req, res, next) => {
     try {
       const resultado = await pool.query(
-        `SELECT id, name, email, role, approval_status, is_active,
-                created_at
+        `SELECT id, name, email, role, approval_status,
+                is_active, created_at
          FROM users
          WHERE approval_status = 'pending'
-           AND role <> 'admin'
          ORDER BY created_at ASC`
       );
 
-      return res.json({
+      res.json({
+        sucesso: true,
         total: resultado.rows.length,
-        usuarios: resultado.rows
+        usuarios: resultado.rows,
       });
-    } catch (error) {
-      console.error("Erro ao listar pendentes:", error);
-
-      return res.status(500).json({
-        erro: "Não foi possível listar os cadastros."
-      });
+    } catch (e) {
+      next(e);
     }
   }
 );
 
-// Aprovar ou rejeitar um cadastro
+// ADMIN: APROVAR OU REJEITAR USUÁRIO
 app.patch(
   "/admin/usuarios/:id/aprovacao",
   autenticarToken,
+  buscarUsuarioAutenticado,
   somenteAdmin,
-  async (req, res) => {
+  async (req, res, next) => {
     try {
-      const { status } = req.body;
-      const id = req.params.id;
+      const id = Number(req.params.id);
+      const status = texto(
+        req.body.approval_status || req.body.status
+      );
 
-      if (!["approved", "rejected"].includes(status)) {
-        return res.status(400).json({
-          erro: "Status deve ser approved ou rejected."
-        });
+      if (!Number.isInteger(id) || id <= 0) {
+        return erro(res, 400, "ID de usuário inválido.");
+      }
+
+      if (!["approved", "rejected", "pending"].includes(status)) {
+        return erro(
+          res,
+          400,
+          "Status deve ser approved, rejected ou pending."
+        );
       }
 
       const resultado = await pool.query(
         `UPDATE users
-         SET approval_status = $1,
-             is_active = $2,
-             updated_at = NOW()
-         WHERE id = $3
-           AND role <> 'admin'
-           AND approval_status = 'pending'
-         RETURNING id, name, email, role,
-                   approval_status, is_active`,
-        [status, status === "approved", id]
+         SET approval_status = $1, updated_at = NOW()
+         WHERE id = $2
+         RETURNING id, name, email, role, approval_status, is_active`,
+        [status, id]
       );
 
       if (resultado.rows.length === 0) {
-        return res.status(404).json({
-          erro: "Cadastro pendente não encontrado."
-        });
+        return erro(res, 404, "Usuário não encontrado.");
       }
 
-      return res.json({
-        mensagem: status === "approved"
-          ? "Cadastro aprovado com sucesso."
-          : "Cadastro rejeitado.",
-        usuario: resultado.rows[0]
+      res.json({
+        sucesso: true,
+        mensagem: "Status do usuário atualizado.",
+        usuario: resultado.rows[0],
       });
-    } catch (error) {
-      console.error("Erro ao atualizar aprovação:", error);
-
-      return res.status(500).json({
-        erro: "Não foi possível atualizar o cadastro."
-      });
+    } catch (e) {
+      next(e);
     }
   }
 );
-        
-/* Cadastro inicial e protegido do administrador */
-app.get("/configurar-admin", (req, res) => {
-  res.send(`
-    <!DOCTYPE html>
-    <html lang="pt-BR">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta charset="UTF-8">
-    <title>Criar administrador</title>
-    <body style="font-family:Arial;max-width:420px;margin:30px auto;padding:16px">
-      <h2>Freelancer Itaúna — Criar ADM</h2>
-      <form id="form">
-        <p>Chave de configuração (NEW_SECRET)</p>
-        <input id="chave" type="password" required style="width:100%;padding:10px">
-        <p>Nome</p>
-        <input id="nome" required style="width:100%;padding:10px">
-        <p>E-mail do administrador</p>
-        <input id="email" type="email" required style="width:100%;padding:10px">
-        <p>Senha do administrador (mínimo 8 caracteres)</p>
-        <input id="senha" type="password" minlength="8" required style="width:100%;padding:10px">
-        <p><button style="padding:12px">Criar administrador</button></p>
-      </form>
-      <pre id="resultado"></pre>
-      <script>
-        document.getElementById("form").onsubmit = async function(e) {
-          e.preventDefault();
-          const r = await fetch("/admin/bootstrap", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-bootstrap-secret": document.getElementById("chave").value
-            },
-            body: JSON.stringify({
-              name: document.getElementById("nome").value,
-              email: document.getElementById("email").value,
-              password: document.getElementById("senha").value
-            })
-          });
-          document.getElementById("resultado").textContent =
-            await r.text();
-        };
-      </script>
-    </body>
-    </html>
-  `);
-});
 
-app.post("/admin/bootstrap", async (req, res) => {
+// CONFIGURAR ADMINISTRADOR INICIAL
+app.post("/configurar-admin", async (req, res, next) => {
   try {
-    if (!process.env.NEW_SECRET ||
-        req.get("x-bootstrap-secret") !== process.env.NEW_SECRET) {
-      return res.status(403).json({ erro: "Chave inválida." });
+    if (!NEW_SECRET) {
+      return erro(
+        res,
+        503,
+        "Configure a variável NEW_SECRET no Render antes de continuar."
+      );
     }
 
-    const existentes = await pool.query(
-      "SELECT id FROM users WHERE role = 'admin' LIMIT 1"
-    );
-    if (existentes.rows.length > 0) {
-      return res.status(409).json({
-        erro: "Já existe um administrador. Cadastro inicial bloqueado."
-      });
-    }
-
-    const { name, email, password } = req.body;
-    if (!name || !email || !password || password.length < 8) {
-      return res.status(400).json({
-        erro: "Informe nome, e-mail e senha com pelo menos 8 caracteres."
-      });
-    }
-
-    const hash = await bcrypt.hash(password, 12);
-    const resultado = await pool.query(
-      `INSERT INTO users (name, email, password_hash, role, is_active)
-       VALUES ($1, $2, $3, 'admin', true)
-       RETURNING id, name, email, role`,
-      [name.trim(), email.trim().toLowerCase(), hash]
+    const chave = texto(
+      req.headers["x-setup-secret"] || req.body.setup_secret
     );
 
-    return res.status(201).json({
-      mensagem: "Administrador criado com sucesso.",
-      usuario: resultado.rows[0]
-    });
-  } catch (error) {
-    if (error.code === "23505") {
-      return res.status(409).json({ erro: "Este e-mail já está cadastrado." });
+    if (chave !== NEW_SECRET) {
+      return erro(res, 403, "Chave de configuração inválida.");
     }
-    console.error("Erro ao criar administrador:", error);
-    return res.status(500).json({
-      erro: "Não foi possível criar o administrador."
-    });
+
+    const nome = texto(req.body.name || req.body.nome);
+    const email = texto(req.body.email).toLowerCase();
+    const senha = req.body.password || req.body.senha;
+
+    if (nome.length < 2 || !emailValido(email)) {
+      return erro(res, 400, "Informe nome e e-mail válidos.");
+    }
+
+    if (typeof senha !== "string" || senha.length < 8) {
+      return erro(res, 400, "A senha deve ter pelo menos 8 caracteres.");
+    }
+
+    const conexao = await pool.connect();
+
+    try {
+      await conexao.query("BEGIN");
+      await conexao.query(
+        "SELECT pg_advisory_xact_lock($1)",
+        [728491]
+      );
+
+      const jaExiste = await conexao.query(
+        "SELECT id FROM users WHERE role = 'admin' LIMIT 1"
+      );
+
+      if (jaExiste.rows.length > 0) {
+        await conexao.query("ROLLBACK");
+        return erro(
+          res,
+          409,
+          "Já existe um administrador. Use a recuperação de senha."
+        );
+      }
+
+      const senhaHash = await bcrypt.hash(senha, 12);
+
+      const resultado = await conexao.query(
+        `INSERT INTO users
+         (name, email, password_hash, role, approval_status, is_active)
+         VALUES ($1, $2, $3, 'admin', 'approved', TRUE)
+         RETURNING id, name, email, role, approval_status, is_active`,
+        [nome, email, senhaHash]
+      );
+
+      await conexao.query("COMMIT");
+
+      res.status(201).json({
+        sucesso: true,
+        mensagem: "Administrador inicial criado.",
+        usuario: resultado.rows[0],
+      });
+    } catch (e) {
+      await conexao.query("ROLLBACK");
+      throw e;
+    } finally {
+      conexao.release();
+    }
+  } catch (e) {
+    if (e.code === "23505") {
+      return erro(res, 409, "Este e-mail já está cadastrado.");
+    }
+    next(e);
   }
 });
-    
-/* Recuperação temporária da senha do administrador */
-app.post("/admin/redefinir-senha", async (req, res) => {
+
+// ADMIN: CRIAR OU RECUPERAR ACESSO DE ADMINISTRADOR
+app.post("/admin/bootstrap", async (req, res, next) => {
   try {
-    if (
-      !process.env.NEW_SECRET ||
-      req.get("x-bootstrap-secret") !== process.env.NEW_SECRET
-    ) {
-      return res.status(403).json({ erro: "Chave inválida." });
+    if (!NEW_SECRET) {
+      return erro(res, 503, "NEW_SECRET não está configurado.");
     }
 
-    const { email, password } = req.body;
+    const chave = texto(
+      req.headers["x-setup-secret"] || req.body.setup_secret
+    );
 
-    if (!email || !password || password.length < 8) {
-      return res.status(400).json({
-        erro: "Informe o e-mail e uma senha com pelo menos 8 caracteres."
-      });
+    if (chave !== NEW_SECRET) {
+      return erro(res, 403, "Chave de configuração inválida.");
     }
 
-    const hash = await bcrypt.hash(password, 12);
+    const email = texto(req.body.email).toLowerCase();
+    const senha = req.body.password || req.body.senha;
 
+    if (!emailValido(email)) {
+      return erro(res, 400, "Informe um e-mail válido.");
+    }
+
+    if (typeof senha !== "string" || senha.length < 8) {
+      return erro(res, 400, "A senha deve ter pelo menos 8 caracteres.");
+    }
+
+    const senhaHash = await bcrypt.hash(senha, 12);
     const resultado = await pool.query(
       `UPDATE users
-       SET password_hash = $1
-       WHERE email = $2 AND role = 'admin'
-       RETURNING id, name, email, role`,
-      [hash, email.trim().toLowerCase()]
+       SET password_hash = $1,
+           role = 'admin',
+           approval_status = 'approved',
+           is_active = TRUE,
+           updated_at = NOW()
+       WHERE email = $2
+       RETURNING id, name, email, role, approval_status, is_active`,
+      [senhaHash, email]
     );
 
     if (resultado.rows.length === 0) {
-      return res.status(404).json({
-        erro: "Conta administradora não encontrada."
-      });
+      return erro(
+        res,
+        404,
+        "E-mail não encontrado. Use /configurar-admin para criar o primeiro administrador."
+      );
     }
 
-    return res.json({
-      mensagem: "Senha do administrador redefinida com sucesso.",
-      usuario: resultado.rows[0]
+    res.json({
+      sucesso: true,
+      mensagem: "Acesso de administrador atualizado.",
+      usuario: resultado.rows[0],
     });
-  } catch (error) {
-    console.error("Erro ao redefinir senha:", error);
-    return res.status(500).json({
-      erro: "Não foi possível redefinir a senha."
-    });
+  } catch (e) {
+    next(e);
   }
 });
 
-    const PORT = process.env.PORT || 3000;
+// ADMIN: REDEFINIR SENHA DE USUÁRIO
+app.post(
+  "/admin/redefinir-senha",
+  autenticarToken,
+  buscarUsuarioAutenticado,
+  somenteAdmin,
+  async (req, res, next) => {
+    try {
+      const id = Number(req.body.id);
+      const senha = req.body.password || req.body.senha;
 
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
+      if (!Number.isInteger(id) || id <= 0) {
+        return erro(res, 400, "Informe um ID de usuário válido.");
+      }
+
+      if (typeof senha !== "string" || senha.length < 8) {
+        return erro(res, 400, "A nova senha deve ter pelo menos 8 caracteres.");
+      }
+
+      const senhaHash = await bcrypt.hash(senha, 12);
+
+      const resultado = await pool.query(
+        `UPDATE users
+         SET password_hash = $1, updated_at = NOW()
+         WHERE id = $2
+         RETURNING id, name, email, role`,
+        [senhaHash, id]
+      );
+
+      if (resultado.rows.length === 0) {
+        return erro(res, 404, "Usuário não encontrado.");
+      }
+
+      res.json({
+        sucesso: true,
+        mensagem: "Senha redefinida com sucesso.",
+        usuario: resultado.rows[0],
+      });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
+// ROTA NÃO ENCONTRADA
+app.use((req, res) => {
+  res.status(404).json({
+    sucesso: false,
+    mensagem: "Rota não encontrada.",
+    caminho: req.path,
+  });
 });
 
-// Backend Freelancer Itaúna
+// TRATAMENTO DE ERROS
+app.use((err, req, res, next) => {
+  console.error("Erro na API:", err.message);
+
+  if (err.code === "23503") {
+    return erro(
+      res,
+      400,
+      "Referência inválida: confira a categoria ou o usuário informado."
+    );
+  }
+
+  if (err.code === "42P01" || err.code === "42703") {
+    return erro(
+      res,
+      500,
+      "Tabela ou coluna não encontrada no banco. Precisamos conferir o esquema do Neon."
+    );
+  }
+
+  if (res.headersSent) {
+    return next(err);
+  }
+
+  res.status(500).json({
+    sucesso: false,
+    mensagem: "Erro interno do servidor.",
+  });
+});
+
+const servidor = app.listen(PORT, () => {
+  console.log(`API Freelancer Itaúna iniciada na porta ${PORT}`);
+});
+
+servidor.on("error", (err) => {
+  console.error("Erro ao iniciar servidor:", err.message);
+});
+
+async function encerrar() {
+  console.log("Encerrando servidor...");
+  servidor.close(async () => {
+    try {
+      await pool.end();
+    } catch (e) {
+      console.error("Erro ao fechar banco:", e.message);
+    }
+    process.exit(0);
+  });
+}
+
+process.on("SIGTERM", encerrar);
+process.on("SIGINT", encerrar);
