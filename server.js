@@ -230,49 +230,79 @@ app.get("/servicos", async (req, res) => {
 });
 
 
-app.get("/perfil-profissional", async (req, res) => {
-  try {
-    const resultado = await pool.query(
-      `SELECT
-        u.id AS user_id,
-        u.name,
-        u.role,
-        pp.id AS perfil_id,
-        pp.profession,
-        pp.description,
-        pp.experience,
-        pp.hourly_rate,
-        pp.availability,
-        pp.address,
-        pp.rating,
-        pp.total_reviews
-       FROM users AS u
-       JOIN professional_profiles AS pp
-         ON pp.user_id = u.id
-       WHERE u.name = $1
-       LIMIT 1`,
-      ["luizcarlosjunior"]
-    );
 
-    if (resultado.rows.length === 0) {
-      return res.status(404).json({
+app.get(
+  "/perfil-profissional",
+  autenticarToken,
+  async (req, res) => {
+    try {
+      // Busca o usuário autenticado no banco para validar
+      // a situação atual da conta.
+      const usuarioResult = await pool.query(
+        `SELECT id, name, role, approval_status, is_active
+         FROM users
+         WHERE id = $1
+         LIMIT 1`,
+        [req.usuario.id]
+      );
+
+      if (usuarioResult.rows.length === 0) {
+        return res.status(401).json({
+          sucesso: false,
+          erro: "Usuário não encontrado."
+        });
+      }
+
+      const usuario = usuarioResult.rows[0];
+
+      if (
+        usuario.role !== "professional" ||
+        usuario.approval_status !== "approved" ||
+        usuario.is_active !== true
+      ) {
+        return res.status(403).json({
+          sucesso: false,
+          erro: "Acesso permitido somente a profissionais aprovados e ativos."
+        });
+      }
+
+      const resultado = await pool.query(
+        `SELECT
+           u.id AS user_id,
+           u.name,
+           u.role,
+           pp.id AS perfil_id,
+           pp.profession,
+           pp.description,
+           pp.experience,
+           pp.hourly_rate,
+           pp.availability,
+           pp.address,
+           pp.rating,
+           pp.total_reviews
+         FROM users AS u
+         LEFT JOIN professional_profiles AS pp
+           ON pp.user_id = u.id
+         WHERE u.id = $1
+         LIMIT 1`,
+        [usuario.id]
+      );
+
+      return res.json({
+        sucesso: true,
+        perfil: resultado.rows[0]
+      });
+    } catch (error) {
+      console.error("Erro ao consultar perfil profissional:", error);
+
+      return res.status(500).json({
         sucesso: false,
-        erro: "Perfil profissional não encontrado."
+        erro: "Não foi possível consultar o perfil profissional."
       });
     }
-
-    return res.json({
-      sucesso: true,
-      perfil: resultado.rows[0]
-    });
-  } catch (error) {
-    console.error("Erro ao consultar perfil profissional:", error);
-    return res.status(500).json({
-      sucesso: false,
-      erro: "Não foi possível consultar o perfil profissional."
-    });
   }
-});
+);
+      
 
 function autenticarToken(req, res, next) {
   const cabecalho = req.headers.authorization;
