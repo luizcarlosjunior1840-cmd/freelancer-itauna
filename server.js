@@ -1,10 +1,12 @@
 
 const express = require("express");
+const path = require("path");
 const { Pool } = require("pg");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 const app = express();
+
 app.use(express.json({ limit: "1mb" }));
 
 const PORT = process.env.PORT || 3000;
@@ -22,15 +24,19 @@ if (!JWT_SECRET) {
 
 const pool = new Pool({
   connectionString: DATABASE_URL,
-  ssl: DATABASE_URL && !/localhost|127\.0\.0\.1/i.test(DATABASE_URL)
-    ? { rejectUnauthorized: false }
-    : false,
+  ssl:
+    DATABASE_URL && !/localhost|127\.0\.0\.1/i.test(DATABASE_URL)
+      ? { rejectUnauthorized: false }
+      : false,
   connectionTimeoutMillis: 10000,
   idleTimeoutMillis: 30000,
 });
 
 function erro(res, status, mensagem) {
-  return res.status(status).json({ sucesso: false, mensagem });
+  return res.status(status).json({
+    sucesso: false,
+    mensagem,
+  });
 }
 
 function texto(valor) {
@@ -39,6 +45,16 @@ function texto(valor) {
 
 function emailValido(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+// VALIDAR UUID DO NEON
+function uuidValido(valor) {
+  return (
+    typeof valor === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      valor
+    )
+  );
 }
 
 function criarToken(usuario) {
@@ -53,11 +69,16 @@ function criarToken(usuario) {
   );
 }
 
+// AUTENTICAÇÃO PELO TOKEN
 function autenticarToken(req, res, next) {
   const cabecalho = req.headers.authorization || "";
   const partes = cabecalho.split(" ");
 
-  if (partes.length !== 2 || partes[0] !== "Bearer") {
+  if (
+    partes.length !== 2 ||
+    partes[0] !== "Bearer" ||
+    !partes[1]
+  ) {
     return erro(res, 401, "Token não informado.");
   }
 
@@ -73,8 +94,13 @@ function autenticarToken(req, res, next) {
   }
 }
 
+// BUSCAR USUÁRIO AUTENTICADO
 async function buscarUsuarioAutenticado(req, res, next) {
   try {
+    if (!uuidValido(req.token.id)) {
+      return erro(res, 401, "Identificador do usuário inválido.");
+    }
+
     const resultado = await pool.query(
       `SELECT id, name, email, role, approval_status, is_active
        FROM users
@@ -107,25 +133,41 @@ async function buscarUsuarioAutenticado(req, res, next) {
   }
 }
 
+// PERMISSÃO DE ADMINISTRADOR
 function somenteAdmin(req, res, next) {
   if (!req.usuario || req.usuario.role !== "admin") {
-    return erro(res, 403, "Acesso permitido somente ao administrador.");
+    return erro(
+      res,
+      403,
+      "Acesso permitido somente ao administrador."
+    );
   }
 
   next();
 }
 
-app.get("/", (req, res) => {
+// PÁGINA INICIAL
+// O index.html precisa estar na mesma pasta do server.js.
+app.get("/", (req, res, next) => {
+  res.sendFile(
+    path.join(__dirname, "index.html"),
+    (err) => {
+      if (err) {
+        next(err);
+      }
+    }
+  );
+});
+
+// VERIFICAR SE A API ESTÁ ONLINE
+app.get("/saude", (req, res) => {
   res.json({
     sucesso: true,
-    mensagem: "API Freelancer Itaúna funcionando.",
+    status: "online",
   });
 });
 
-app.get("/saude", (req, res) => {
-  res.json({ sucesso: true, status: "online" });
-});
-
+// TESTAR CONEXÃO COM O NEON
 app.get("/teste-neon", async (req, res, next) => {
   try {
     const resultado = await pool.query(
@@ -148,9 +190,15 @@ app.post("/cadastro", async (req, res, next) => {
     const nome = texto(req.body.name || req.body.nome);
     const email = texto(req.body.email).toLowerCase();
     const senha = req.body.password || req.body.senha;
-    const papel = texto(req.body.role || req.body.tipo || "client");
+    const papel = texto(
+      req.body.role || req.body.tipo || "client"
+    );
 
-    const papeisPermitidos = ["client", "professional", "company"];
+    const papeisPermitidos = [
+      "client",
+      "professional",
+      "company",
+    ];
 
     if (nome.length < 2) {
       return erro(res, 400, "Informe seu nome completo.");
@@ -160,8 +208,15 @@ app.post("/cadastro", async (req, res, next) => {
       return erro(res, 400, "Informe um e-mail válido.");
     }
 
-    if (typeof senha !== "string" || senha.length < 8) {
-      return erro(res, 400, "A senha deve ter pelo menos 8 caracteres.");
+    if (
+      typeof senha !== "string" ||
+      senha.length < 8
+    ) {
+      return erro(
+        res,
+        400,
+        "A senha deve ter pelo menos 8 caracteres."
+      );
     }
 
     if (!papeisPermitidos.includes(papel)) {
@@ -183,21 +238,21 @@ app.post("/cadastro", async (req, res, next) => {
       `INSERT INTO users
        (name, email, password_hash, role, approval_status, is_active)
        VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id, name, email, role, approval_status, is_active, created_at`,
+       RETURNING id, name, email, role, approval_status,
+                 is_active, created_at`,
       [nome, email, senhaHash, papel, "pending", true]
     );
-
-    const usuario = resultado.rows[0];
 
     res.status(201).json({
       sucesso: true,
       mensagem: "Cadastro realizado. Aguarde a aprovação da conta.",
-      usuario,
+      usuario: resultado.rows[0],
     });
   } catch (e) {
     if (e.code === "23505") {
       return erro(res, 409, "Este e-mail já está cadastrado.");
     }
+
     next(e);
   }
 });
@@ -226,6 +281,7 @@ app.post("/login", async (req, res, next) => {
     }
 
     const usuario = resultado.rows[0];
+
     const senhaCorreta = await bcrypt.compare(
       senha,
       usuario.password_hash
@@ -272,26 +328,30 @@ app.post("/login", async (req, res, next) => {
 // LISTAR SERVIÇOS
 app.get("/servicos", async (req, res, next) => {
   try {
-    const cidade = texto(req.query.city || req.query.cidade);
+    const cidade = texto(
+      req.query.city || req.query.cidade
+    );
+
     const categoriaId = texto(req.query.category_id);
+
     const valores = [];
     const filtros = ["s.status = 'active'"];
 
     if (cidade) {
       valores.push(`%${cidade}%`);
+
       filtros.push(
         `LOWER(s.city) LIKE LOWER($${valores.length})`
       );
     }
 
+    // category_id é UUID no banco Neon.
     if (categoriaId) {
-      const id = Number(categoriaId);
-
-      if (!Number.isInteger(id) || id <= 0) {
+      if (!uuidValido(categoriaId)) {
         return erro(res, 400, "Categoria inválida.");
       }
 
-      valores.push(id);
+      valores.push(categoriaId);
       filtros.push(`s.category_id = $${valores.length}`);
     }
 
@@ -320,7 +380,7 @@ app.get("/servicos", async (req, res, next) => {
   }
 });
 
-// CADASTRAR UM SERVIÇO
+// CADASTRAR SERVIÇO
 app.post(
   "/servicos",
   autenticarToken,
@@ -328,7 +388,9 @@ app.post(
   async (req, res, next) => {
     try {
       if (
-        !["professional", "company", "admin"].includes(req.usuario.role)
+        !["professional", "company", "admin"].includes(
+          req.usuario.role
+        )
       ) {
         return erro(
           res,
@@ -337,16 +399,30 @@ app.post(
         );
       }
 
-      const titulo = texto(req.body.title || req.body.titulo);
+      const titulo = texto(
+        req.body.title || req.body.titulo
+      );
+
       const descricao = texto(
         req.body.description || req.body.descricao
       );
-      const cidade = texto(req.body.city || req.body.cidade);
-      const estado = texto(req.body.state || req.body.estado);
-      const categoriaId = Number(
+
+      const cidade = texto(
+        req.body.city || req.body.cidade
+      );
+
+      const estado = texto(
+        req.body.state || req.body.estado
+      );
+
+      const categoriaId = texto(
         req.body.category_id || req.body.categoria_id
       );
-      const preco = Number(req.body.price || req.body.preco);
+
+      const valorInformado =
+        req.body.price ?? req.body.preco;
+
+      const preco = Number(valorInformado);
 
       if (titulo.length < 3) {
         return erro(res, 400, "Informe o título do serviço.");
@@ -360,11 +436,17 @@ app.post(
         return erro(res, 400, "Informe cidade e estado.");
       }
 
-      if (!Number.isInteger(categoriaId) || categoriaId <= 0) {
+      if (!uuidValido(categoriaId)) {
         return erro(res, 400, "Informe uma categoria válida.");
       }
 
-      if (!Number.isFinite(preco) || preco < 0) {
+      if (
+        valorInformado === undefined ||
+        valorInformado === null ||
+        valorInformado === "" ||
+        !Number.isFinite(preco) ||
+        preco < 0
+      ) {
         return erro(res, 400, "Informe um preço válido.");
       }
 
@@ -397,59 +479,75 @@ app.post(
   }
 );
 
-// PERFIL PROFISSIONAL
+// CONSULTAR PERFIL PROFISSIONAL
+// Aceita /perfil-profissional e /perfil-profissional/:id
+async function consultarPerfilProfissional(req, res, next) {
+  try {
+    const idSolicitado = req.params.id
+      ? texto(req.params.id).toLowerCase()
+      : String(req.usuario.id).toLowerCase();
+
+    if (!uuidValido(idSolicitado)) {
+      return erro(res, 400, "ID de usuário inválido.");
+    }
+
+    const idAutenticado = String(
+      req.usuario.id
+    ).toLowerCase();
+
+    if (
+      idSolicitado !== idAutenticado &&
+      req.usuario.role !== "admin"
+    ) {
+      return erro(
+        res,
+        403,
+        "Você só pode consultar seu próprio perfil."
+      );
+    }
+
+    const resultado = await pool.query(
+      `SELECT user_id, profession, description, experience,
+              hourly_rate, availability, address, rating,
+              total_reviews
+       FROM professional_profiles
+       WHERE user_id = $1
+       LIMIT 1`,
+      [idSolicitado]
+    );
+
+    if (resultado.rows.length === 0) {
+      return res.json({
+        sucesso: true,
+        mensagem: "Perfil profissional ainda não cadastrado.",
+        perfil: null,
+      });
+    }
+
+    res.json({
+      sucesso: true,
+      perfil: resultado.rows[0],
+    });
+  } catch (e) {
+    next(e);
+  }
+}
+
 app.get(
-  "/perfil-profissional/:id?",
+  "/perfil-profissional",
   autenticarToken,
   buscarUsuarioAutenticado,
-  async (req, res, next) => {
-    try {
-      const idSolicitado = req.params.id
-        ? Number(req.params.id)
-        : Number(req.usuario.id);
-
-      if (!Number.isInteger(idSolicitado) || idSolicitado <= 0) {
-        return erro(res, 400, "ID de usuário inválido.");
-      }
-
-      if (
-        idSolicitado !== Number(req.usuario.id) &&
-        req.usuario.role !== "admin"
-      ) {
-        return erro(
-          res,
-          403,
-          "Você só pode consultar seu próprio perfil."
-        );
-      }
-
-      const resultado = await pool.query(
-        `SELECT user_id, profession, description, experience,
-                hourly_rate, availability, address, rating, total_reviews
-         FROM professional_profiles
-         WHERE user_id = $1
-         LIMIT 1`,
-        [idSolicitado]
-      );
-
-      if (resultado.rows.length === 0) {
-        return res.json({
-          sucesso: true,
-          mensagem: "Perfil profissional ainda não cadastrado.",
-          perfil: null,
-        });
-      }
-
-      res.json({
-        sucesso: true,
-        perfil: resultado.rows[0],
-      });
-    } catch (e) {
-      next(e);
-    }
-  }
+  consultarPerfilProfissional
 );
 
+app.get(
+  "/perfil-profissional/:id",
+  autenticarToken,
+  buscarUsuarioAutenticado,
+  consultarPerfilProfissional
+);
+
+// CRIAR OU ATUALIZAR PERFIL PROFISSIONAL
 app.put(
   "/perfil-profissional",
   autenticarToken,
@@ -457,7 +555,9 @@ app.put(
   async (req, res, next) => {
     try {
       if (
-        !["professional", "company", "admin"].includes(req.usuario.role)
+        !["professional", "company", "admin"].includes(
+          req.usuario.role
+        )
       ) {
         return erro(
           res,
@@ -469,17 +569,26 @@ app.put(
       const profissao = texto(
         req.body.profession || req.body.profissao
       );
+
       const descricao = texto(
         req.body.description || req.body.descricao
       );
+
       const experiencia = texto(
         req.body.experience || req.body.experiencia
       );
-      const disponibilidade = texto(req.body.availability);
+
+      const disponibilidade = texto(
+        req.body.availability
+      );
+
       const endereco = texto(req.body.address);
-      const valorHora = req.body.hourly_rate == null
-        ? null
-        : Number(req.body.hourly_rate);
+
+      const valorHora =
+        req.body.hourly_rate == null ||
+        req.body.hourly_rate === ""
+          ? null
+          : Number(req.body.hourly_rate);
 
       if (!profissao) {
         return erro(res, 400, "Informe sua profissão.");
@@ -563,16 +672,19 @@ app.patch(
   somenteAdmin,
   async (req, res, next) => {
     try {
-      const id = Number(req.params.id);
+      const id = texto(req.params.id).toLowerCase();
+
       const status = texto(
         req.body.approval_status || req.body.status
       );
 
-      if (!Number.isInteger(id) || id <= 0) {
+      if (!uuidValido(id)) {
         return erro(res, 400, "ID de usuário inválido.");
       }
 
-      if (!["approved", "rejected", "pending"].includes(status)) {
+      if (
+        !["approved", "rejected", "pending"].includes(status)
+      ) {
         return erro(
           res,
           400,
@@ -584,7 +696,8 @@ app.patch(
         `UPDATE users
          SET approval_status = $1, updated_at = NOW()
          WHERE id = $2
-         RETURNING id, name, email, role, approval_status, is_active`,
+         RETURNING id, name, email, role,
+                   approval_status, is_active`,
         [status, id]
       );
 
@@ -615,29 +728,42 @@ app.post("/configurar-admin", async (req, res, next) => {
     }
 
     const chave = texto(
-      req.headers["x-setup-secret"] || req.body.setup_secret
+      req.headers["x-setup-secret"] ||
+      req.body.setup_secret
     );
 
     if (chave !== NEW_SECRET) {
       return erro(res, 403, "Chave de configuração inválida.");
     }
 
-    const nome = texto(req.body.name || req.body.nome);
+    const nome = texto(
+      req.body.name || req.body.nome
+    );
+
     const email = texto(req.body.email).toLowerCase();
+
     const senha = req.body.password || req.body.senha;
 
     if (nome.length < 2 || !emailValido(email)) {
       return erro(res, 400, "Informe nome e e-mail válidos.");
     }
 
-    if (typeof senha !== "string" || senha.length < 8) {
-      return erro(res, 400, "A senha deve ter pelo menos 8 caracteres.");
+    if (
+      typeof senha !== "string" ||
+      senha.length < 8
+    ) {
+      return erro(
+        res,
+        400,
+        "A senha deve ter pelo menos 8 caracteres."
+      );
     }
 
     const conexao = await pool.connect();
 
     try {
       await conexao.query("BEGIN");
+
       await conexao.query(
         "SELECT pg_advisory_xact_lock($1)",
         [728491]
@@ -649,6 +775,7 @@ app.post("/configurar-admin", async (req, res, next) => {
 
       if (jaExiste.rows.length > 0) {
         await conexao.query("ROLLBACK");
+
         return erro(
           res,
           409,
@@ -660,9 +787,11 @@ app.post("/configurar-admin", async (req, res, next) => {
 
       const resultado = await conexao.query(
         `INSERT INTO users
-         (name, email, password_hash, role, approval_status, is_active)
+         (name, email, password_hash, role,
+          approval_status, is_active)
          VALUES ($1, $2, $3, 'admin', 'approved', TRUE)
-         RETURNING id, name, email, role, approval_status, is_active`,
+         RETURNING id, name, email, role,
+                   approval_status, is_active`,
         [nome, email, senhaHash]
       );
 
@@ -683,19 +812,25 @@ app.post("/configurar-admin", async (req, res, next) => {
     if (e.code === "23505") {
       return erro(res, 409, "Este e-mail já está cadastrado.");
     }
+
     next(e);
   }
 });
 
-// ADMIN: CRIAR OU RECUPERAR ACESSO DE ADMINISTRADOR
+// ADMIN: RECUPERAR OU CONFIGURAR ACESSO
 app.post("/admin/bootstrap", async (req, res, next) => {
   try {
     if (!NEW_SECRET) {
-      return erro(res, 503, "NEW_SECRET não está configurado.");
+      return erro(
+        res,
+        503,
+        "NEW_SECRET não está configurado."
+      );
     }
 
     const chave = texto(
-      req.headers["x-setup-secret"] || req.body.setup_secret
+      req.headers["x-setup-secret"] ||
+      req.body.setup_secret
     );
 
     if (chave !== NEW_SECRET) {
@@ -703,17 +838,26 @@ app.post("/admin/bootstrap", async (req, res, next) => {
     }
 
     const email = texto(req.body.email).toLowerCase();
+
     const senha = req.body.password || req.body.senha;
 
     if (!emailValido(email)) {
       return erro(res, 400, "Informe um e-mail válido.");
     }
 
-    if (typeof senha !== "string" || senha.length < 8) {
-      return erro(res, 400, "A senha deve ter pelo menos 8 caracteres.");
+    if (
+      typeof senha !== "string" ||
+      senha.length < 8
+    ) {
+      return erro(
+        res,
+        400,
+        "A senha deve ter pelo menos 8 caracteres."
+      );
     }
 
     const senhaHash = await bcrypt.hash(senha, 12);
+
     const resultado = await pool.query(
       `UPDATE users
        SET password_hash = $1,
@@ -722,7 +866,8 @@ app.post("/admin/bootstrap", async (req, res, next) => {
            is_active = TRUE,
            updated_at = NOW()
        WHERE email = $2
-       RETURNING id, name, email, role, approval_status, is_active`,
+       RETURNING id, name, email, role,
+                 approval_status, is_active`,
       [senhaHash, email]
     );
 
@@ -744,7 +889,7 @@ app.post("/admin/bootstrap", async (req, res, next) => {
   }
 });
 
-// ADMIN: REDEFINIR SENHA DE USUÁRIO
+// ADMIN: REDEFINIR SENHA
 app.post(
   "/admin/redefinir-senha",
   autenticarToken,
@@ -752,15 +897,27 @@ app.post(
   somenteAdmin,
   async (req, res, next) => {
     try {
-      const id = Number(req.body.id);
+      const id = texto(req.body.id).toLowerCase();
+
       const senha = req.body.password || req.body.senha;
 
-      if (!Number.isInteger(id) || id <= 0) {
-        return erro(res, 400, "Informe um ID de usuário válido.");
+      if (!uuidValido(id)) {
+        return erro(
+          res,
+          400,
+          "Informe um ID de usuário válido."
+        );
       }
 
-      if (typeof senha !== "string" || senha.length < 8) {
-        return erro(res, 400, "A nova senha deve ter pelo menos 8 caracteres.");
+      if (
+        typeof senha !== "string" ||
+        senha.length < 8
+      ) {
+        return erro(
+          res,
+          400,
+          "A nova senha deve ter pelo menos 8 caracteres."
+        );
       }
 
       const senhaHash = await bcrypt.hash(senha, 12);
@@ -809,6 +966,22 @@ app.use((err, req, res, next) => {
     );
   }
 
+  if (err.code === "23505") {
+    return erro(
+      res,
+      409,
+      "Já existe um registro com esses dados."
+    );
+  }
+
+  if (err.code === "22P02") {
+    return erro(
+      res,
+      400,
+      "Um identificador ou valor informado possui formato inválido."
+    );
+  }
+
   if (err.code === "42P01" || err.code === "42703") {
     return erro(
       res,
@@ -827,22 +1000,28 @@ app.use((err, req, res, next) => {
   });
 });
 
+// INICIAR SERVIDOR
 const servidor = app.listen(PORT, () => {
-  console.log(`API Freelancer Itaúna iniciada na porta ${PORT}`);
+  console.log(
+    `API Freelancer Itaúna iniciada na porta ${PORT}`
+  );
 });
 
 servidor.on("error", (err) => {
   console.error("Erro ao iniciar servidor:", err.message);
 });
 
+// ENCERRAMENTO CONTROLADO
 async function encerrar() {
   console.log("Encerrando servidor...");
+
   servidor.close(async () => {
     try {
       await pool.end();
     } catch (e) {
       console.error("Erro ao fechar banco:", e.message);
     }
+
     process.exit(0);
   });
 }
