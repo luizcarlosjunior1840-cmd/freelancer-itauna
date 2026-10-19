@@ -1,48 +1,1046 @@
+
 "use strict";
+
 require("dotenv").config();
+
 const express = require("express");
 const path = require("path");
 const { Pool } = require("pg");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DATABASE_URL = process.env.DATABASE_URL;
 const JWT_SECRET = process.env.JWT_SECRET;
 const NEW_SECRET = process.env.NEW_SECRET;
+
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: false }));
-const pool = new Pool({ connectionString: DATABASE_URL, ssl: DATABASE_URL && !/localhost|127\.0\.0\.1/i.test(DATABASE_URL) ? { rejectUnauthorized: false } : false, connectionTimeoutMillis: 10000, idleTimeoutMillis: 30000 });
-const fail = (res, status, mensagem) => res.status(status).json({ sucesso: false, mensagem });
+
+const pool = new Pool({
+  connectionString: DATABASE_URL,
+  ssl: DATABASE_URL && !/localhost|127\.0\.0\.1/i.test(DATABASE_URL)
+    ? { rejectUnauthorized: false }
+    : false,
+  connectionTimeoutMillis: 10000,
+  idleTimeoutMillis: 30000
+});
+
+const fail = (res, status, mensagem) =>
+  res.status(status).json({ sucesso: false, mensagem });
+
 const txt = v => typeof v === "string" ? v.trim() : "";
-const validEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-const validUUID = v => typeof v === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
-function makeToken(user) { if (!JWT_SECRET) throw new Error("JWT_SECRET não configurado no Render."); return jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: "7d" }); }
-function auth(req,res,next) { const h=txt(req.headers.authorization); if(!h.startsWith("Bearer ")) return fail(res,401,"Entre na sua conta para continuar."); if(!JWT_SECRET) return fail(res,500,"JWT_SECRET não configurado."); try { req.claims=jwt.verify(h.slice(7),JWT_SECRET); next(); } catch { return fail(res,401,"Sessão inválida ou expirada. Entre novamente."); } }
-async function currentUser(req,res,next) { try { if(!validUUID(req.claims.id)) return fail(res,401,"Identificador de conta inválido."); const q=await pool.query("SELECT id,name,email,role,approval_status,is_active FROM users WHERE id=$1 LIMIT 1",[req.claims.id]); if(!q.rowCount) return fail(res,401,"Conta não encontrada."); const u=q.rows[0]; if(u.is_active===false) return fail(res,403,"Conta desativada."); if(u.role!=="admin" && u.approval_status!=="approved") return fail(res,403,"Sua conta ainda não foi aprovada."); req.user=u; next(); } catch(e){next(e);} }
-function adminOnly(req,res,next){ if(req.user?.role!=="admin") return fail(res,403,"Acesso exclusivo da administração."); next(); }
-const roles = ["client","professional","company"];
-app.get("/",(req,res,next)=>res.sendFile(path.join(__dirname,"index.html"),e=>e&&next(e)));
-app.get("/saude",(req,res)=>res.json({sucesso:true,status:"online"}));
-app.get("/teste-neon",async(req,res,next)=>{try{const r=await pool.query("SELECT NOW() AS horario");res.json({sucesso:true,mensagem:"Conexão com Neon funcionando.",horario:r.rows[0].horario});}catch(e){next(e);}});
-app.post("/cadastro",async(req,res,next)=>{try{const name=txt(req.body.name||req.body.nome),email=txt(req.body.email).toLowerCase(),password=req.body.password||req.body.senha,role=txt(req.body.role||req.body.tipo||"client");if(name.length<2)return fail(res,400,"Informe seu nome completo.");if(!validEmail(email))return fail(res,400,"Informe um e-mail válido.");if(typeof password!=="string"||password.length<8)return fail(res,400,"A senha deve ter pelo menos 8 caracteres.");if(!roles.includes(role))return fail(res,400,"Tipo de conta inválido.");const hash=await bcrypt.hash(password,12);const r=await pool.query("INSERT INTO users(name,email,password_hash,role,approval_status,is_active) VALUES($1,$2,$3,$4,'pending',TRUE) RETURNING id,name,email,role,approval_status,is_active,created_at",[name,email,hash,role]);res.status(201).json({sucesso:true,mensagem:"Cadastro recebido. Aguarde a aprovação da administração.",usuario:r.rows[0]});}catch(e){if(e.code==="23505")return fail(res,409,"Este e-mail já está cadastrado.");next(e);}});
-app.post("/login",async(req,res,next)=>{try{const email=txt(req.body.email).toLowerCase(),password=req.body.password||req.body.senha;if(!validEmail(email)||typeof password!=="string")return fail(res,400,"Informe e-mail e senha.");const r=await pool.query("SELECT id,name,email,password_hash,role,approval_status,is_active FROM users WHERE email=$1 LIMIT 1",[email]);if(!r.rowCount)return fail(res,401,"E-mail ou senha incorretos.");const u=r.rows[0];if(!await bcrypt.compare(password,u.password_hash))return fail(res,401,"E-mail ou senha incorretos.");if(u.is_active===false)return fail(res,403,"Conta desativada.");if(u.role!=="admin"&&u.approval_status!=="approved")return res.status(403).json({sucesso:false,mensagem:"Sua conta ainda aguarda aprovação.",status:u.approval_status});res.json({sucesso:true,mensagem:"Login realizado com sucesso.",token:makeToken(u),usuario:{id:u.id,name:u.name,email:u.email,role:u.role,approval_status:u.approval_status}});}catch(e){next(e);}});
-app.get("/categorias",async(req,res,next)=>{try{const r=await pool.query("SELECT id,name,description FROM categories ORDER BY name ASC");res.json({sucesso:true,total:r.rowCount,categorias:r.rows});}catch(e){next(e);}});
-app.get("/servicos",async(req,res,next)=>{try{const city=txt(req.query.city||req.query.cidade),cat=txt(req.query.category_id);const vals=[],where=["s.status='active'","u.is_active=TRUE","u.approval_status='approved'"];if(city){vals.push("%"+city+"%");where.push(`LOWER(s.city) LIKE LOWER($${vals.length})`);}if(cat){if(!validUUID(cat))return fail(res,400,"Categoria inválida.");vals.push(cat);where.push(`s.category_id=$${vals.length}`);}const r=await pool.query(`SELECT s.id,s.professional_id,s.category_id,s.title,s.description,s.price,s.city,s.state,s.created_at,u.name AS professional_name,c.name AS category_name FROM services s JOIN users u ON u.id=s.professional_id LEFT JOIN categories c ON c.id=s.category_id WHERE ${where.join(" AND ")} ORDER BY s.created_at DESC LIMIT 100`,vals);res.json({sucesso:true,total:r.rowCount,servicos:r.rows});}catch(e){next(e);}});
-app.post("/servicos",auth,currentUser,async(req,res,next)=>{try{if(!["professional","company","admin"].includes(req.user.role))return fail(res,403,"Somente profissionais e empresas podem cadastrar serviços.");const title=txt(req.body.title||req.body.titulo),description=txt(req.body.description||req.body.descricao),city=txt(req.body.city||req.body.cidade)||"Itaúna",state=txt(req.body.state||req.body.estado)||"MG",category=txt(req.body.category_id||req.body.categoria_id),raw=req.body.price??req.body.preco,price=Number(raw);if(title.length<3)return fail(res,400,"O título precisa ter pelo menos 3 caracteres.");if(!description)return fail(res,400,"Informe a descrição.");if(!validUUID(category))return fail(res,400,"Selecione uma categoria válida.");if(raw===undefined||raw===""||!Number.isFinite(price)||price<0)return fail(res,400,"Informe um preço válido (use 0 se for a combinar).");const r=await pool.query("INSERT INTO services(professional_id,category_id,title,description,price,city,state,status) VALUES($1,$2,$3,$4,$5,$6,$7,'active') RETURNING *",[req.user.id,category,title,description,price,city,state]);res.status(201).json({sucesso:true,mensagem:"Serviço cadastrado.",servico:r.rows[0]});}catch(e){next(e);}});
-app.get("/perfil-profissional",auth,currentUser,async(req,res,next)=>{try{const r=await pool.query("SELECT user_id,profession,description,experience,hourly_rate,availability,address,rating,total_reviews FROM professional_profiles WHERE user_id=$1 LIMIT 1",[req.user.id]);res.json({sucesso:true,perfil:r.rows[0]||null});}catch(e){next(e);}});
-app.put("/perfil-profissional",auth,currentUser,async(req,res,next)=>{try{if(!["professional","company","admin"].includes(req.user.role))return fail(res,403,"Esta conta não pode editar perfil profissional.");const profession=txt(req.body.profession||req.body.profissao),description=txt(req.body.description||req.body.descricao),experience=txt(req.body.experience||req.body.experiencia),availability=txt(req.body.availability),address=txt(req.body.address),raw=req.body.hourly_rate,rate=raw==null||raw===""?null:Number(raw);if(!profession)return fail(res,400,"Informe sua profissão ou atividade principal.");if(rate!==null&&(!Number.isFinite(rate)||rate<0))return fail(res,400,"Valor por hora inválido.");const r=await pool.query(`INSERT INTO professional_profiles(user_id,profession,description,experience,hourly_rate,availability,address) VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT(user_id) DO UPDATE SET profession=EXCLUDED.profession,description=EXCLUDED.description,experience=EXCLUDED.experience,hourly_rate=EXCLUDED.hourly_rate,availability=EXCLUDED.availability,address=EXCLUDED.address RETURNING user_id,profession,description,experience,hourly_rate,availability,address,rating,total_reviews`,[req.user.id,profession,description,experience,rate,availability,address]);res.json({sucesso:true,mensagem:"Perfil salvo com sucesso.",perfil:r.rows[0]});}catch(e){next(e);}});
-// A tabela de solicitações é criada automaticamente, sem alterar as tabelas já existentes.
-app.get("/configuracao/solicitacoes",auth,currentUser,adminOnly,async(req,res,next)=>{try{const r=await pool.query("SELECT id,client_id,service_id,details,status,assigned_professional_id,created_at,updated_at FROM hiring_requests ORDER BY created_at DESC LIMIT 200");res.json({sucesso:true,total:r.rowCount,solicitacoes:r.rows});}catch(e){next(e);}});
-app.post("/contratacoes",auth,currentUser,async(req,res,next)=>{try{if(req.user.role!=="client")return fail(res,403,"Somente clientes podem enviar solicitações de contratação.");const serviceId=txt(req.body.service_id),details=txt(req.body.details||req.body.descricao);if(!validUUID(serviceId))return fail(res,400,"Serviço inválido.");if(details.length<10)return fail(res,400,"Explique o que precisa (mínimo 10 caracteres).");const svc=await pool.query("SELECT id FROM services WHERE id=$1 AND status='active'",[serviceId]);if(!svc.rowCount)return fail(res,404,"Serviço não encontrado ou indisponível.");const r=await pool.query("INSERT INTO hiring_requests(client_id,service_id,details,status) VALUES($1,$2,$3,'pending') RETURNING id,status,created_at",[req.user.id,serviceId,details]);res.status(201).json({sucesso:true,mensagem:"Solicitação enviada para análise da administração. Os contatos não serão exibidos diretamente.",solicitacao:r.rows[0]});}catch(e){next(e);}});
-app.get("/minhas-contratacoes",auth,currentUser,async(req,res,next)=>{try{if(req.user.role!=="client")return fail(res,403,"Esta área é exclusiva de clientes.");const r=await pool.query("SELECT h.id,h.details,h.status,h.created_at,s.title AS service_title FROM hiring_requests h JOIN services s ON s.id=h.service_id WHERE h.client_id=$1 ORDER BY h.created_at DESC",[req.user.id]);res.json({sucesso:true,solicitacoes:r.rows});}catch(e){next(e);}});
-app.get("/minhas-oportunidades",auth,currentUser,async(req,res,next)=>{try{if(!["professional","company"].includes(req.user.role))return fail(res,403,"Esta área é exclusiva de profissionais e empresas.");const r=await pool.query("SELECT h.id,h.details,h.status,h.created_at,s.title AS service_title FROM hiring_requests h JOIN services s ON s.id=h.service_id WHERE h.assigned_professional_id=$1 ORDER BY h.created_at DESC",[req.user.id]);res.json({sucesso:true,oportunidades:r.rows});}catch(e){next(e);}});
-app.get("/admin/usuarios-pendentes",auth,currentUser,adminOnly,async(req,res,next)=>{try{const r=await pool.query("SELECT id,name,email,role,approval_status,is_active,created_at FROM users WHERE approval_status='pending' ORDER BY created_at ASC");res.json({sucesso:true,total:r.rowCount,usuarios:r.rows});}catch(e){next(e);}});
-app.patch("/admin/usuarios/:id/aprovacao",auth,currentUser,adminOnly,async(req,res,next)=>{try{const id=txt(req.params.id),status=txt(req.body.status||req.body.approval_status);if(!validUUID(id))return fail(res,400,"ID de usuário inválido.");if(!["approved","rejected","pending"].includes(status))return fail(res,400,"Status inválido.");const r=await pool.query("UPDATE users SET approval_status=$1,updated_at=NOW() WHERE id=$2 RETURNING id,name,email,role,approval_status,is_active",[status,id]);if(!r.rowCount)return fail(res,404,"Usuário não encontrado.");res.json({sucesso:true,mensagem:"Status atualizado.",usuario:r.rows[0]});}catch(e){next(e);}});
-app.patch("/admin/contratacoes/:id",auth,currentUser,adminOnly,async(req,res,next)=>{try{const id=txt(req.params.id),status=txt(req.body.status),professional=txt(req.body.professional_id)||null;if(!validUUID(id))return fail(res,400,"ID de solicitação inválido.");if(!["pending","reviewing","assigned","completed","rejected"].includes(status))return fail(res,400,"Status inválido.");if(professional&&!validUUID(professional))return fail(res,400,"ID de profissional inválido.");if(professional){const u=await pool.query("SELECT id FROM users WHERE id=$1 AND role IN ('professional','company') AND is_active=TRUE AND approval_status='approved'",[professional]);if(!u.rowCount)return fail(res,400,"Profissional não encontrado, aprovado ou ativo.");}const r=await pool.query("UPDATE hiring_requests SET status=$1,assigned_professional_id=$2,updated_at=NOW() WHERE id=$3 RETURNING id,status,assigned_professional_id,updated_at",[status,professional,id]);if(!r.rowCount)return fail(res,404,"Solicitação não encontrada.");res.json({sucesso:true,mensagem:"Solicitação atualizada.",solicitacao:r.rows[0]});}catch(e){next(e);}});
-app.get("/admin/usuarios",auth,currentUser,adminOnly,async(req,res,next)=>{try{const r=await pool.query("SELECT id,name,email,role,approval_status,is_active,created_at FROM users ORDER BY created_at DESC LIMIT 300");res.json({sucesso:true,usuarios:r.rows});}catch(e){next(e);}});
-app.post("/configurar-admin",async(req,res,next)=>{const client=await pool.connect();try{if(!NEW_SECRET)return fail(res,503,"Configure NEW_SECRET no Render.");const secret=txt(req.headers["x-setup-secret"]||req.body.setup_secret);if(secret!==NEW_SECRET)return fail(res,403,"Chave de configuração inválida.");const name=txt(req.body.name||req.body.nome),email=txt(req.body.email).toLowerCase(),password=req.body.password||req.body.senha;if(name.length<2||!validEmail(email)||typeof password!=="string"||password.length<8)return fail(res,400,"Informe nome, e-mail e senha com pelo menos 8 caracteres.");await client.query("BEGIN");await client.query("SELECT pg_advisory_xact_lock($1)",[728491]);const exists=await client.query("SELECT id FROM users WHERE role='admin' LIMIT 1");if(exists.rowCount){await client.query("ROLLBACK");return fail(res,409,"Já existe um administrador.");}const hash=await bcrypt.hash(password,12);const r=await client.query("INSERT INTO users(name,email,password_hash,role,approval_status,is_active) VALUES($1,$2,$3,'admin','approved',TRUE) RETURNING id,name,email,role",[name,email,hash]);await client.query("COMMIT");res.status(201).json({sucesso:true,mensagem:"Administrador criado.",usuario:r.rows[0]});}catch(e){await client.query("ROLLBACK");if(e.code==="23505")return fail(res,409,"E-mail já cadastrado.");next(e);}finally{client.release();}});
-app.use((req,res)=>res.status(404).json({sucesso:false,mensagem:"Rota não encontrada.",caminho:req.path}));
-app.use((err,req,res,next)=>{console.error("Erro API:",err.code||"",err.message);if(res.headersSent)return next(err);if(err.code==="23503")return fail(res,400,"Referência inválida. Confira o serviço ou usuário informado.");if(err.code==="23505")return fail(res,409,"Registro duplicado.");if(err.code==="22P02")return fail(res,400,"Identificador em formato inválido.");if(err.code==="42P01"||err.code==="42703")return fail(res,500,"Tabela ou coluna ausente no Neon. Confira o esquema do banco.");res.status(500).json({sucesso:false,mensagem:"Erro interno do servidor."});});
-async function iniciar(){if(!DATABASE_URL)console.error("AVISO: DATABASE_URL não configurado.");if(!JWT_SECRET)console.error("AVISO: JWT_SECRET não configurado.");if(DATABASE_URL){try{await pool.query(`CREATE TABLE IF NOT EXISTS hiring_requests (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), client_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE, service_id UUID NOT NULL REFERENCES services(id) ON DELETE CASCADE, details TEXT NOT NULL, status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','reviewing','assigned','completed','rejected')), assigned_professional_id UUID NULL REFERENCES users(id) ON DELETE SET NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);console.log("Tabela hiring_requests verificada.");}catch(e){console.error("Não foi possível verificar hiring_requests:",e.message);}}const server=app.listen(PORT,()=>console.log(`Freelancer Itaúna online na porta ${PORT}`));const close=()=>server.close(async()=>{await pool.end();process.exit(0);});process.on("SIGTERM",close);process.on("SIGINT",close);}
+
+const validEmail = v =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+
+const validUUID = v =>
+  typeof v === "string" &&
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+
+function makeToken(user) {
+  if (!JWT_SECRET) {
+    throw new Error("JWT_SECRET não configurado no Render.");
+  }
+
+  return jwt.sign({ id: user.id }, JWT_SECRET, {
+    expiresIn: "7d"
+  });
+}
+
+function auth(req, res, next) {
+  const h = txt(req.headers.authorization);
+
+  if (!h.startsWith("Bearer ")) {
+    return fail(res, 401, "Entre na sua conta para continuar.");
+  }
+
+  if (!JWT_SECRET) {
+    return fail(res, 500, "JWT_SECRET não configurado.");
+  }
+
+  try {
+    req.claims = jwt.verify(h.slice(7), JWT_SECRET);
+    next();
+  } catch {
+    return fail(res, 401, "Sessão inválida ou expirada. Entre novamente.");
+  }
+}
+
+async function currentUser(req, res, next) {
+  try {
+    if (!validUUID(req.claims.id)) {
+      return fail(res, 401, "Identificador de conta inválido.");
+    }
+
+    const q = await pool.query(
+      `SELECT id, name, email, role, approval_status, is_active
+       FROM users WHERE id=$1 LIMIT 1`,
+      [req.claims.id]
+    );
+
+    if (!q.rowCount) {
+      return fail(res, 401, "Conta não encontrada.");
+    }
+
+    const u = q.rows[0];
+
+    if (u.is_active === false) {
+      return fail(res, 403, "Conta desativada.");
+    }
+
+    if (u.role !== "admin" && u.approval_status !== "approved") {
+      return fail(res, 403, "Sua conta ainda não foi aprovada.");
+    }
+
+    req.user = u;
+    next();
+  } catch (e) {
+    next(e);
+  }
+}
+
+function adminOnly(req, res, next) {
+  if (req.user?.role !== "admin") {
+    return fail(res, 403, "Acesso exclusivo da administração.");
+  }
+
+  next();
+}
+
+const roles = ["client", "professional", "company"];
+
+// ==================================================
+// INÍCIO E TESTES
+// ==================================================
+
+app.get("/", (req, res, next) => {
+  res.sendFile(path.join(__dirname, "index.html"), e => {
+    if (e) next(e);
+  });
+});
+
+app.get("/saude", (req, res) => {
+  res.json({ sucesso: true, status: "online" });
+});
+
+app.get("/teste-neon", async (req, res, next) => {
+  try {
+    const r = await pool.query("SELECT NOW() AS horario");
+
+    res.json({
+      sucesso: true,
+      mensagem: "Conexão com Neon funcionando.",
+      horario: r.rows[0].horario
+    });
+  } catch (e) {
+    next(e);
+  }
+});
+
+// ==================================================
+// CADASTRO
+// ==================================================
+
+app.post("/cadastro", async (req, res, next) => {
+  try {
+    const name = txt(req.body.name || req.body.nome);
+    const email = txt(req.body.email).toLowerCase();
+    const password = req.body.password || req.body.senha;
+    const role = txt(req.body.role || req.body.tipo || "client");
+
+    if (name.length < 2) {
+      return fail(res, 400, "Informe seu nome completo.");
+    }
+
+    if (!validEmail(email)) {
+      return fail(res, 400, "Informe um e-mail válido.");
+    }
+
+    if (typeof password !== "string" || password.length < 8) {
+      return fail(res, 400, "A senha deve ter pelo menos 8 caracteres.");
+    }
+
+    if (!roles.includes(role)) {
+      return fail(res, 400, "Tipo de conta inválido.");
+    }
+
+    const hash = await bcrypt.hash(password, 12);
+
+    const r = await pool.query(
+      `INSERT INTO users
+       (name, email, password_hash, role, approval_status, is_active)
+       VALUES ($1,$2,$3,$4,'pending',TRUE)
+       RETURNING id,name,email,role,approval_status,is_active,created_at`,
+      [name, email, hash, role]
+    );
+
+    res.status(201).json({
+      sucesso: true,
+      mensagem: "Cadastro recebido. Aguarde a aprovação da administração.",
+      usuario: r.rows[0]
+    });
+  } catch (e) {
+    if (e.code === "23505") {
+      return fail(res, 409, "Este e-mail já está cadastrado.");
+    }
+
+    next(e);
+  }
+});
+
+// ==================================================
+// LOGIN
+// ==================================================
+
+app.post("/login", async (req, res, next) => {
+  try {
+    const email = txt(req.body.email).toLowerCase();
+    const password = req.body.password || req.body.senha;
+
+    if (!validEmail(email) || typeof password !== "string") {
+      return fail(res, 400, "Informe e-mail e senha.");
+    }
+
+    const r = await pool.query(
+      `SELECT id,name,email,password_hash,role,approval_status,is_active
+       FROM users WHERE email=$1 LIMIT 1`,
+      [email]
+    );
+
+    if (!r.rowCount) {
+      return fail(res, 401, "E-mail ou senha incorretos.");
+    }
+
+    const u = r.rows[0];
+
+    if (!await bcrypt.compare(password, u.password_hash)) {
+      return fail(res, 401, "E-mail ou senha incorretos.");
+    }
+
+    if (u.is_active === false) {
+      return fail(res, 403, "Conta desativada.");
+    }
+
+    if (u.role !== "admin" && u.approval_status !== "approved") {
+      return res.status(403).json({
+        sucesso: false,
+        mensagem: "Sua conta ainda aguarda aprovação.",
+        status: u.approval_status
+      });
+    }
+
+    res.json({
+      sucesso: true,
+      mensagem: "Login realizado com sucesso.",
+      token: makeToken(u),
+      usuario: {
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        role: u.role,
+        approval_status: u.approval_status
+      }
+    });
+  } catch (e) {
+    next(e);
+  }
+});
+
+// ==================================================
+// CATEGORIAS
+// ==================================================
+
+app.get("/categorias", async (req, res, next) => {
+  try {
+    const r = await pool.query(
+      "SELECT id,name,description FROM categories ORDER BY name ASC"
+    );
+
+    res.json({
+      sucesso: true,
+      total: r.rowCount,
+      categorias: r.rows
+    });
+  } catch (e) {
+    next(e);
+  }
+});
+
+// ==================================================
+// SERVIÇOS PÚBLICOS
+// Somente serviços aprovados e ativos aparecem.
+// ==================================================
+
+app.get("/servicos", async (req, res, next) => {
+  try {
+    const city = txt(req.query.city || req.query.cidade);
+    const cat = txt(req.query.category_id);
+
+    const vals = [];
+    const where = [
+      "s.status='active'",
+      "u.is_active=TRUE",
+      "u.approval_status='approved'"
+    ];
+
+    if (city) {
+      vals.push("%" + city + "%");
+      where.push(`LOWER(s.city) LIKE LOWER($${vals.length})`);
+    }
+
+    if (cat) {
+      if (!validUUID(cat)) {
+        return fail(res, 400, "Categoria inválida.");
+      }
+
+      vals.push(cat);
+      where.push(`s.category_id=$${vals.length}`);
+    }
+
+    const r = await pool.query(
+      `SELECT s.id,s.professional_id,s.category_id,
+              s.title,s.description,s.price,s.city,s.state,
+              s.created_at,u.name AS professional_name,
+              c.name AS category_name
+       FROM services s
+       JOIN users u ON u.id=s.professional_id
+       LEFT JOIN categories c ON c.id=s.category_id
+       WHERE ${where.join(" AND ")}
+       ORDER BY s.created_at DESC
+       LIMIT 100`,
+      vals
+    );
+
+    res.json({
+      sucesso: true,
+      total: r.rowCount,
+      servicos: r.rows
+    });
+  } catch (e) {
+    next(e);
+  }
+});
+
+// ==================================================
+// CADASTRO DE SERVIÇOS
+// Novo serviço fica pendente até aprovação do admin.
+// ==================================================
+
+app.post("/servicos", auth, currentUser, async (req, res, next) => {
+  try {
+    if (!["professional", "company", "admin"].includes(req.user.role)) {
+      return fail(
+        res,
+        403,
+        "Somente profissionais e empresas podem cadastrar serviços."
+      );
+    }
+
+    const title = txt(req.body.title || req.body.titulo);
+    const description = txt(req.body.description || req.body.descricao);
+    const city = txt(req.body.city || req.body.cidade) || "Itaúna";
+    const state = txt(req.body.state || req.body.estado) || "MG";
+    const category = txt(req.body.category_id || req.body.categoria_id);
+    const raw = req.body.price ?? req.body.preco;
+    const price = Number(raw);
+
+    if (title.length < 3) {
+      return fail(res, 400, "O título precisa ter pelo menos 3 caracteres.");
+    }
+
+    if (!description) {
+      return fail(res, 400, "Informe a descrição.");
+    }
+
+    if (!validUUID(category)) {
+      return fail(res, 400, "Selecione uma categoria válida.");
+    }
+
+    if (raw === undefined || raw === "" ||
+        !Number.isFinite(price) || price < 0) {
+      return fail(res, 400, "Informe um preço válido. Use 0 se for a combinar.");
+    }
+
+    const r = await pool.query(
+      `INSERT INTO services
+       (professional_id,category_id,title,description,price,city,state,status)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,'pending')
+       RETURNING id,title,description,price,city,state,status,created_at`,
+      [
+        req.user.id,
+        category,
+        title,
+        description,
+        price,
+        city,
+        state
+      ]
+    );
+
+    res.status(201).json({
+      sucesso: true,
+      mensagem: "Serviço enviado para aprovação da administração. Ele só ficará público após ser aprovado.",
+      servico: r.rows[0]
+    });
+  } catch (e) {
+    next(e);
+  }
+});
+
+// ==================================================
+// PERFIL PROFISSIONAL
+// ==================================================
+
+app.get("/perfil-profissional", auth, currentUser, async (req, res, next) => {
+  try {
+    const r = await pool.query(
+      `SELECT user_id,profession,description,experience,
+              hourly_rate,availability,address,rating,total_reviews
+       FROM professional_profiles
+       WHERE user_id=$1 LIMIT 1`,
+      [req.user.id]
+    );
+
+    res.json({
+      sucesso: true,
+      perfil: r.rows[0] || null
+    });
+  } catch (e) {
+    next(e);
+  }
+});
+
+app.put("/perfil-profissional", auth, currentUser, async (req, res, next) => {
+  try {
+    if (!["professional", "company", "admin"].includes(req.user.role)) {
+      return fail(res, 403, "Esta conta não pode editar perfil profissional.");
+    }
+
+    const profession = txt(req.body.profession || req.body.profissao);
+    const description = txt(req.body.description || req.body.descricao);
+    const experience = txt(req.body.experience || req.body.experiencia);
+    const availability = txt(req.body.availability);
+    const address = txt(req.body.address);
+
+    const raw = req.body.hourly_rate;
+    const rate = raw == null || raw === "" ? null : Number(raw);
+
+    if (!profession) {
+      return fail(res, 400, "Informe sua profissão ou atividade principal.");
+    }
+
+    if (rate !== null && (!Number.isFinite(rate) || rate < 0)) {
+      return fail(res, 400, "Valor por hora inválido.");
+    }
+
+    const r = await pool.query(
+      `INSERT INTO professional_profiles
+       (user_id,profession,description,experience,hourly_rate,availability,address)
+       VALUES ($1,$2,$3,$4,$5,$6,$7)
+       ON CONFLICT(user_id) DO UPDATE SET
+         profession=EXCLUDED.profession,
+         description=EXCLUDED.description,
+         experience=EXCLUDED.experience,
+         hourly_rate=EXCLUDED.hourly_rate,
+         availability=EXCLUDED.availability,
+         address=EXCLUDED.address
+       RETURNING user_id,profession,description,experience,
+                 hourly_rate,availability,address,rating,total_reviews`,
+      [
+        req.user.id,
+        profession,
+        description,
+        experience,
+        rate,
+        availability,
+        address
+      ]
+    );
+
+    res.json({
+      sucesso: true,
+      mensagem: "Perfil salvo com sucesso.",
+      perfil: r.rows[0]
+    });
+  } catch (e) {
+    next(e);
+  }
+});
+
+// ==================================================
+// ADMINISTRAÇÃO: APROVAR CADASTROS
+// ==================================================
+
+app.get(
+  "/admin/usuarios-pendentes",
+  auth,
+  currentUser,
+  adminOnly,
+  async (req, res, next) => {
+    try {
+      const r = await pool.query(
+        `SELECT id,name,email,role,approval_status,is_active,created_at
+         FROM users
+         WHERE approval_status='pending'
+         ORDER BY created_at ASC`
+      );
+
+      res.json({
+        sucesso: true,
+        total: r.rowCount,
+        usuarios: r.rows
+      });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
+app.patch(
+  "/admin/usuarios/:id/aprovacao",
+  auth,
+  currentUser,
+  adminOnly,
+  async (req, res, next) => {
+    try {
+      const id = txt(req.params.id);
+      const status = txt(req.body.status || req.body.approval_status);
+
+      if (!validUUID(id)) {
+        return fail(res, 400, "ID de usuário inválido.");
+      }
+
+      if (!["approved", "rejected", "pending"].includes(status)) {
+        return fail(res, 400, "Status inválido.");
+      }
+
+      if (id === req.user.id && status !== "approved") {
+        return fail(res, 400, "Não é permitido alterar o próprio acesso administrativo por esta rota.");
+      }
+
+      const r = await pool.query(
+        `UPDATE users
+         SET approval_status=$1,updated_at=NOW()
+         WHERE id=$2
+         RETURNING id,name,email,role,approval_status,is_active`,
+        [status, id]
+      );
+
+      if (!r.rowCount) {
+        return fail(res, 404, "Usuário não encontrado.");
+      }
+
+      res.json({
+        sucesso: true,
+        mensagem: "Status do cadastro atualizado.",
+        usuario: r.rows[0]
+      });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
+// ==================================================
+// ADMINISTRAÇÃO: APROVAR SERVIÇOS
+// ==================================================
+
+app.get(
+  "/admin/servicos-pendentes",
+  auth,
+  currentUser,
+  adminOnly,
+  async (req, res, next) => {
+    try {
+      const r = await pool.query(
+        `SELECT s.id,s.professional_id,s.category_id,s.title,
+                s.description,s.price,s.city,s.state,s.status,s.created_at,
+                u.name AS professional_name,
+                u.email AS professional_email,
+                c.name AS category_name
+         FROM services s
+         JOIN users u ON u.id=s.professional_id
+         LEFT JOIN categories c ON c.id=s.category_id
+         WHERE s.status='pending'
+         ORDER BY s.created_at ASC`
+      );
+
+      res.json({
+        sucesso: true,
+        total: r.rowCount,
+        servicos: r.rows
+      });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
+app.patch(
+  "/admin/servicos/:id/aprovacao",
+  auth,
+  currentUser,
+  adminOnly,
+  async (req, res, next) => {
+    try {
+      const id = txt(req.params.id);
+      const status = txt(req.body.status);
+
+      if (!validUUID(id)) {
+        return fail(res, 400, "ID de serviço inválido.");
+      }
+
+      if (!["active", "rejected", "pending"].includes(status)) {
+        return fail(res, 400, "Status inválido.");
+      }
+
+      const r = await pool.query(
+        `UPDATE services
+         SET status=$1,updated_at=NOW()
+         WHERE id=$2
+         RETURNING id,title,status,professional_id,updated_at`,
+        [status, id]
+      );
+
+      if (!r.rowCount) {
+        return fail(res, 404, "Serviço não encontrado.");
+      }
+
+      res.json({
+        sucesso: true,
+        mensagem: status === "active"
+          ? "Serviço aprovado e liberado para aparecer no catálogo."
+          : status === "rejected"
+            ? "Serviço rejeitado."
+            : "Serviço voltou para análise.",
+        servico: r.rows[0]
+      });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
+// ==================================================
+// SOLICITAÇÕES DE CONTRATAÇÃO
+// ==================================================
+
+app.get(
+  "/configuracao/solicitacoes",
+  auth,
+  currentUser,
+  adminOnly,
+  async (req, res, next) => {
+    try {
+      const r = await pool.query(
+        `SELECT id,client_id,service_id,details,status,
+                assigned_professional_id,created_at,updated_at
+         FROM hiring_requests
+         ORDER BY created_at DESC
+         LIMIT 200`
+      );
+
+      res.json({
+        sucesso: true,
+        total: r.rowCount,
+        solicitacoes: r.rows
+      });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
+app.post("/contratacoes", auth, currentUser, async (req, res, next) => {
+  try {
+    if (req.user.role !== "client") {
+      return fail(res, 403, "Somente clientes podem enviar solicitações de contratação.");
+    }
+
+    const serviceId = txt(req.body.service_id);
+    const details = txt(req.body.details || req.body.descricao);
+
+    if (!validUUID(serviceId)) {
+      return fail(res, 400, "Serviço inválido.");
+    }
+
+    if (details.length < 10) {
+      return fail(res, 400, "Explique o que precisa (mínimo 10 caracteres).");
+    }
+
+    const svc = await pool.query(
+      `SELECT s.id
+       FROM services s
+       JOIN users u ON u.id=s.professional_id
+       WHERE s.id=$1 AND s.status='active'
+         AND u.is_active=TRUE
+         AND u.approval_status='approved'`,
+      [serviceId]
+    );
+
+    if (!svc.rowCount) {
+      return fail(res, 404, "Serviço não encontrado ou indisponível.");
+    }
+
+    const r = await pool.query(
+      `INSERT INTO hiring_requests(client_id,service_id,details,status)
+       VALUES ($1,$2,$3,'pending')
+       RETURNING id,status,created_at`,
+      [req.user.id, serviceId, details]
+    );
+
+    res.status(201).json({
+      sucesso: true,
+      mensagem: "Solicitação enviada para análise da administração. Os contatos não serão exibidos diretamente.",
+      solicitacao: r.rows[0]
+    });
+  } catch (e) {
+    next(e);
+  }
+});
+
+app.get(
+  "/minhas-contratacoes",
+  auth,
+  currentUser,
+  async (req, res, next) => {
+    try {
+      if (req.user.role !== "client") {
+        return fail(res, 403, "Esta área é exclusiva de clientes.");
+      }
+
+      const r = await pool.query(
+        `SELECT h.id,h.details,h.status,h.created_at,
+                s.title AS service_title
+         FROM hiring_requests h
+         JOIN services s ON s.id=h.service_id
+         WHERE h.client_id=$1
+         ORDER BY h.created_at DESC`,
+        [req.user.id]
+      );
+
+      res.json({
+        sucesso: true,
+        solicitacoes: r.rows
+      });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
+app.get(
+  "/minhas-oportunidades",
+  auth,
+  currentUser,
+  async (req, res, next) => {
+    try {
+      if (!["professional", "company"].includes(req.user.role)) {
+        return fail(res, 403, "Esta área é exclusiva de profissionais e empresas.");
+      }
+
+      const r = await pool.query(
+        `SELECT h.id,h.details,h.status,h.created_at,
+                s.title AS service_title
+         FROM hiring_requests h
+         JOIN services s ON s.id=h.service_id
+         WHERE h.assigned_professional_id=$1
+         ORDER BY h.created_at DESC`,
+        [req.user.id]
+      );
+
+      res.json({
+        sucesso: true,
+        oportunidades: r.rows
+      });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
+app.patch(
+  "/admin/contratacoes/:id",
+  auth,
+  currentUser,
+  adminOnly,
+  async (req, res, next) => {
+    try {
+      const id = txt(req.params.id);
+      const status = txt(req.body.status);
+      const professional = txt(req.body.professional_id) || null;
+
+      if (!validUUID(id)) {
+        return fail(res, 400, "ID de solicitação inválido.");
+      }
+
+      if (!["pending", "reviewing", "assigned", "completed", "rejected"].includes(status)) {
+        return fail(res, 400, "Status inválido.");
+      }
+
+      if (professional && !validUUID(professional)) {
+        return fail(res, 400, "ID de profissional inválido.");
+      }
+
+      if (status === "assigned" && !professional) {
+        return fail(res, 400, "Informe o ID do profissional aprovado para atribuir a solicitação.");
+      }
+
+      if (professional) {
+        const u = await pool.query(
+          `SELECT id FROM users
+           WHERE id=$1
+             AND role IN ('professional','company')
+             AND is_active=TRUE
+             AND approval_status='approved'`,
+          [professional]
+        );
+
+        if (!u.rowCount) {
+          return fail(res, 400, "Profissional não encontrado, aprovado ou ativo.");
+        }
+      }
+
+      const r = await pool.query(
+        `UPDATE hiring_requests
+         SET status=$1,assigned_professional_id=$2,updated_at=NOW()
+         WHERE id=$3
+         RETURNING id,status,assigned_professional_id,updated_at`,
+        [status, professional, id]
+      );
+
+      if (!r.rowCount) {
+        return fail(res, 404, "Solicitação não encontrada.");
+      }
+
+      res.json({
+        sucesso: true,
+        mensagem: "Solicitação atualizada.",
+        solicitacao: r.rows[0]
+      });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
+// ==================================================
+// ADMINISTRAÇÃO: LISTA DE USUÁRIOS
+// ==================================================
+
+app.get(
+  "/admin/usuarios",
+  auth,
+  currentUser,
+  adminOnly,
+  async (req, res, next) => {
+    try {
+      const r = await pool.query(
+        `SELECT id,name,email,role,approval_status,is_active,created_at
+         FROM users
+         ORDER BY created_at DESC
+         LIMIT 300`
+      );
+
+      res.json({
+        sucesso: true,
+        usuarios: r.rows
+      });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
+// ==================================================
+// CONFIGURAÇÃO INICIAL DO ADMINISTRADOR
+// Use somente durante a configuração inicial.
+// ==================================================
+
+app.post("/configurar-admin", async (req, res, next) => {
+  let client;
+
+  try {
+    if (!NEW_SECRET) {
+      return fail(res, 503, "Configure NEW_SECRET no Render.");
+    }
+
+    const secret = txt(
+      req.headers["x-setup-secret"] || req.body.setup_secret
+    );
+
+    if (secret !== NEW_SECRET) {
+      return fail(res, 403, "Chave de configuração inválida.");
+    }
+
+    const name = txt(req.body.name || req.body.nome);
+    const email = txt(req.body.email).toLowerCase();
+    const password = req.body.password || req.body.senha;
+
+    if (
+      name.length < 2 ||
+      !validEmail(email) ||
+      typeof password !== "string" ||
+      password.length < 8
+    ) {
+      return fail(
+        res,
+        400,
+        "Informe nome, e-mail e senha com pelo menos 8 caracteres."
+      );
+    }
+
+    client = await pool.connect();
+
+    await client.query("BEGIN");
+    await client.query("SELECT pg_advisory_xact_lock($1)", [728491]);
+
+    const exists = await client.query(
+      "SELECT id FROM users WHERE role='admin' LIMIT 1"
+    );
+
+    if (exists.rowCount) {
+      await client.query("ROLLBACK");
+      return fail(res, 409, "Já existe um administrador.");
+    }
+
+    const hash = await bcrypt.hash(password, 12);
+
+    const r = await client.query(
+      `INSERT INTO users
+       (name,email,password_hash,role,approval_status,is_active)
+       VALUES ($1,$2,$3,'admin','approved',TRUE)
+       RETURNING id,name,email,role`,
+      [name, email, hash]
+    );
+
+    await client.query("COMMIT");
+
+    res.status(201).json({
+      sucesso: true,
+      mensagem: "Administrador criado.",
+      usuario: r.rows[0]
+    });
+  } catch (e) {
+    if (client) {
+      try {
+        await client.query("ROLLBACK");
+      } catch {}
+    }
+
+    if (e.code === "23505") {
+      return fail(res, 409, "E-mail já cadastrado.");
+    }
+
+    next(e);
+  } finally {
+    if (client) client.release();
+  }
+});
+
+// ==================================================
+// ROTAS NÃO ENCONTRADAS
+// ==================================================
+
+app.use((req, res) => {
+  res.status(404).json({
+    sucesso: false,
+    mensagem: "Rota não encontrada.",
+    caminho: req.path
+  });
+});
+
+// ==================================================
+// TRATAMENTO DE ERROS
+// ==================================================
+
+app.use((err, req, res, next) => {
+  console.error("Erro API:", err.code || "", err.message);
+
+  if (res.headersSent) return next(err);
+
+  if (err.code === "23503") {
+    return fail(res, 400, "Referência inválida. Confira o serviço ou usuário informado.");
+  }
+
+  if (err.code === "23505") {
+    return fail(res, 409, "Registro duplicado.");
+  }
+
+  if (err.code === "22P02") {
+    return fail(res, 400, "Identificador em formato inválido.");
+  }
+
+  if (err.code === "42P01" || err.code === "42703") {
+    return fail(
+      res,
+      500,
+      "Tabela ou coluna ausente no Neon. Confira o esquema do banco."
+    );
+  }
+
+  res.status(500).json({
+    sucesso: false,
+    mensagem: "Erro interno do servidor."
+  });
+});
+
+// ==================================================
+// INICIALIZAÇÃO
+// ==================================================
+
+async function iniciar() {
+  if (!DATABASE_URL) {
+    console.error("AVISO: DATABASE_URL não configurado.");
+  }
+
+  if (!JWT_SECRET) {
+    console.error("AVISO: JWT_SECRET não configurado.");
+  }
+
+  if (DATABASE_URL) {
+    try {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS hiring_requests (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          client_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          service_id UUID NOT NULL REFERENCES services(id) ON DELETE CASCADE,
+          details TEXT NOT NULL,
+          status VARCHAR(20) NOT NULL DEFAULT 'pending'
+            CHECK (status IN (
+              'pending','reviewing','assigned','completed','rejected'
+            )),
+          assigned_professional_id UUID NULL
+            REFERENCES users(id) ON DELETE SET NULL,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `);
+
+      console.log("Tabela hiring_requests verificada.");
+    } catch (e) {
+      console.error(
+        "Não foi possível verificar hiring_requests:",
+        e.message
+      );
+    }
+  }
+
+  const server = app.listen(PORT, () => {
+    console.log(`Freelancer Itaúna online na porta ${PORT}`);
+  });
+
+  const close = () => {
+    server.close(async () => {
+      await pool.end();
+      process.exit(0);
+    });
+  };
+
+  process.on("SIGTERM", close);
+  process.on("SIGINT", close);
+}
+
 iniciar();
