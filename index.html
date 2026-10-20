@@ -533,6 +533,7 @@ async function renderNewService(root) {
   await fillCategorySelect($("serviceCategory"));
 
   $("servicoForm").onsubmit = async ev => {
+    const form = ev.currentTarget;
     ev.preventDefault();
 
     const button = ev.submitter;
@@ -551,7 +552,7 @@ async function renderNewService(root) {
       });
 
       msg("servicoMsg", result.mensagem || "Serviço enviado para aprovação.");
-      ev.currentTarget.reset();
+      form.reset();
     } catch (e) {
       msg("servicoMsg", e.message);
     } finally {
