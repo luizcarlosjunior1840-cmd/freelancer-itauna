@@ -162,23 +162,13 @@ function dataValida(value) {
    INÍCIO E TESTES
 ===================================================== */
 
+
 app.get("/", (req, res) => {
-  res.type("html").send(`
-    <!DOCTYPE html>
-    <html lang="pt-BR">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>Freelancer Itaúna</title>
-    </head>
-    <body style="font-family:Arial;padding:30px">
-      <h1>Freelancer Itaúna</h1>
-      <p>Servidor online.</p>
-      <p>Acesse a página principal publicada com o arquivo index.html.</p>
-    </body>
-    </html>
-  `);
+  res.sendFile(
+    require("path").join(__dirname, "index.html")
+  );
 });
+
 
 app.get("/saude", (req, res) => {
   res.json({
