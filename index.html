@@ -1053,7 +1053,7 @@ $("formCadastro").onsubmit = async ev => {
 
 $("formLogin").onsubmit = async ev => {
   ev.preventDefault();
-
+const formulario = ev.currentTarget;
   const button = ev.submitter;
   button.disabled = true;
   msg("loginMsg", "Entrando...");
@@ -1061,13 +1061,13 @@ $("formLogin").onsubmit = async ev => {
   try {
     const data = await api("/login", {
       method: "POST",
-      body: JSON.stringify(formData(ev.currentTarget))
+      body: JSON.stringify(formData(formulario))
     });
 
     sessionStorage.setItem("freelancer_token", data.token);
     user = data.usuario;
 
-    ev.currentTarget.reset();
+    formulario.reset();
     msg("loginMsg", "Login realizado.");
     showPanel();
   } catch (e) {
