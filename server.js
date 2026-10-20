@@ -578,6 +578,8 @@ app.get(
   }
 );
 
+
+
 app.patch(
   "/admin/servicos/:id/aprovacao",
   auth,
@@ -596,12 +598,16 @@ app.patch(
         return fail(res, 400, "Status inválido.");
       }
 
+      // O banco aceita pending, active e inactive.
+      // A rejeição será gravada como inactive.
+      const statusBanco = status === "rejected" ? "inactive" : status;
+
       const r = await pool.query(
         `UPDATE services
-         SET status=$1,updated_at=NOW()
+         SET status=$1, updated_at=NOW()
          WHERE id=$2
-         RETURNING id,title,status,professional_id,updated_at`,
-        [status, id]
+         RETURNING id, title, status, professional_id`,
+        [statusBanco, id]
       );
 
       if (!r.rowCount) {
@@ -610,12 +616,16 @@ app.patch(
 
       res.json({
         sucesso: true,
-        mensagem: status === "active"
-          ? "Serviço aprovado e liberado para aparecer no catálogo."
-          : status === "rejected"
-            ? "Serviço rejeitado."
-            : "Serviço voltou para análise.",
-        servico: r.rows[0]
+        mensagem:
+          status === "active"
+            ? "Serviço aprovado e liberado para publicação."
+            : status === "rejected"
+              ? "Serviço rejeitado."
+              : "Serviço voltou para análise.",
+        servico: {
+          ...r.rows[0],
+          status: status
+        }
       });
     } catch (e) {
       next(e);
