@@ -1,788 +1,1287 @@
 
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#123b2a">
-<meta name="description" content="Freelancer Itaúna: encontre profissionais, divulgue serviços e acompanhe contratações pela plataforma.">
-<title>Freelancer Itaúna</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111827">
+  <meta name="description" content="Encontre vagas freelancer em Itaúna e região.">
+  <title>Freelancer Itaúna | Vagas e profissionais</title>
 
-<style>
-:root{
-  --green:#123b2a;--main:#176b43;--pale:#e6f4e9;
-  --ink:#183126;--line:#dce5dd;--danger:#a92e2e;
-}
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;font-family:Arial,sans-serif;background:#f5f7f5;color:var(--ink);line-height:1.55}
-header,footer{background:var(--green);color:white;padding:18px}
-header{position:sticky;top:0;z-index:5}
-.wrap{width:min(960px,calc(100% - 28px));margin:auto}
-.brand{font-size:23px;font-weight:800}
-.brand span{color:#9ee6b0}
-.hero{padding:48px 14px;text-align:center;background:var(--pale)}
-h1{font-size:clamp(30px,7vw,46px);line-height:1.12;margin:0 0 16px}
-h2{line-height:1.25}
-.hero p{max-width:650px;margin:0 auto 22px;font-size:18px}
-.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.center{justify-content:center}
-.btn,button{border:0;border-radius:9px;padding:12px 16px;font-size:16px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block}
-.primary{background:var(--main);color:white}
-.secondary{background:white;color:var(--main);border:1px solid var(--main)}
-.danger{background:var(--danger);color:white}
-.btn:focus,button:focus,input:focus,select:focus,textarea:focus{outline:3px solid #9ee6b0;outline-offset:2px}
-button:disabled{opacity:.55;cursor:wait}
-section{padding:25px 0}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:15px}
-.card,.panel{background:white;border:1px solid var(--line);border-radius:15px;padding:20px;margin:0 0 15px;box-shadow:0 2px 8px #123b2a08}
-.card h2,.panel h2{margin-top:0}
-.note,.small{font-size:14px;color:#53665a}
-label{display:block;font-weight:700;margin-top:12px}
-input,select,textarea{display:block;width:100%;padding:13px;margin:5px 0 8px;border:1px solid #ccd8ce;border-radius:8px;background:white;font:inherit;color:inherit}
-textarea{min-height:100px;resize:vertical}
-.status{background:#eef5ef;border-radius:9px;padding:12px;overflow-wrap:anywhere;min-height:12px}
-.hidden{display:none!important}
-.nav{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
-.item{border:1px solid var(--line);padding:15px;border-radius:10px;margin:10px 0;background:white;overflow-wrap:anywhere}
-.item h3{margin:0 0 6px}
-.price{font-weight:800;color:var(--main)}
-.tag{display:inline-block;background:var(--pale);padding:4px 8px;border-radius:99px;font-size:13px}
-.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:15px}
-.empty{color:#526358;padding:12px}
-.topline{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-footer{margin-top:30px}
-.card .btn,.card button{margin-top:5px}
-button,.btn{min-height:44px}
-@media(max-width:480px){.card,.panel{padding:16px}.hero{padding:35px 12px}.btn,button{font-size:15px}}
-</style>
+  <style>
+    :root {
+      --bg: #f3f5f9;
+      --card: #ffffff;
+      --dark: #111827;
+      --dark2: #1f2937;
+      --orange: #f97316;
+      --orange2: #ea580c;
+      --text: #1f2937;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --green: #15803d;
+      --red: #b91c1c;
+      --radius: 16px;
+      --shadow: 0 8px 28px rgba(15, 23, 42, .08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.5;
+    }
+
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; }
+
+    .topbar {
+      background: var(--dark);
+      color: white;
+      padding: 15px 18px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: 0 3px 14px #0002;
+    }
+
+    .topbar-inner {
+      max-width: 1120px;
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      font-weight: 900;
+      font-size: 21px;
+      letter-spacing: -.5px;
+    }
+
+    .brand span { color: var(--orange); }
+
+    .nav {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .nav button {
+      border: 1px solid #ffffff35;
+      background: transparent;
+      color: white;
+      padding: 9px 12px;
+      border-radius: 9px;
+      font-weight: 700;
+    }
+
+    .nav button:hover { background: #ffffff18; }
+
+    main {
+      max-width: 1120px;
+      margin: auto;
+      padding: 22px 15px 55px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #111827, #26354b);
+      color: white;
+      border-radius: 22px;
+      padding: 30px 24px;
+      margin-bottom: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: clamp(27px, 5vw, 42px);
+      line-height: 1.15;
+    }
+
+    .hero p {
+      color: #e2e8f0;
+      max-width: 650px;
+      margin: 0 0 20px;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .section h2 { margin: 0 0 14px; }
+    .muted { color: var(--muted); }
+    .small { font-size: 13px; }
+    .hidden { display: none !important; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .field.full { grid-column: 1 / -1; }
+
+    label {
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid #cbd5e1;
+      background: white;
+      border-radius: 10px;
+      padding: 12px;
+      color: var(--text);
+      outline: none;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 3px #f9731620;
+    }
+
+    textarea {
+      min-height: 105px;
+      resize: vertical;
+    }
+
+    .btn {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      gap: 7px;
+      border: 0;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .btn-primary { background: var(--orange); color: #111827; }
+    .btn-primary:hover { background: #fb923c; }
+    .btn-dark { background: var(--dark); color: white; }
+    .btn-light { background: #e2e8f0; color: var(--dark); }
+    .btn-danger { background: #fee2e2; color: var(--red); }
+    .btn-success { background: #dcfce7; color: var(--green); }
+    .btn:disabled { opacity: .55; cursor: not-allowed; }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .job-card {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 17px;
+      background: white;
+      min-width: 0;
+    }
+
+    .job-card h3 { margin: 0 0 8px; overflow-wrap: anywhere; }
+    .job-card p { margin: 7px 0; overflow-wrap: anywhere; }
+    .job-value {
+      color: var(--green);
+      font-size: 21px;
+      font-weight: 900;
+    }
+
+    .badge {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 4px 9px;
+      background: #e2e8f0;
+      color: #334155;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-approved, .status-assigned { background: #dcfce7; color: #166534; }
+    .status-rejected { background: #fee2e2; color: #991b1b; }
+
+    .notice {
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      margin-bottom: 14px;
+    }
+
+    .message {
+      border-radius: 10px;
+      padding: 12px;
+      margin: 12px 0;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .message.error { background: #fee2e2; color: #991b1b; }
+    .message.success { background: #dcfce7; color: #166534; }
+    .message.info { background: #e0f2fe; color: #075985; }
+
+    .item {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 15px;
+      margin: 12px 0;
+      overflow-wrap: anywhere;
+    }
+
+    .item h3 { margin: 0 0 8px; }
+    .item p { margin: 6px 0; }
+    .divider { border: 0; border-top: 1px solid var(--border); margin: 20px 0; }
+
+    .footer {
+      background: var(--dark);
+      color: #cbd5e1;
+      padding: 22px 15px;
+      text-align: center;
+    }
+
+    .footer strong { color: var(--orange); }
+
+    #globalMessage { margin-bottom: 16px; }
+
+    @media (max-width: 720px) {
+      .grid, .cards { grid-template-columns: 1fr; }
+      .filters { grid-template-columns: 1fr; }
+      .section { padding: 16px; }
+      .hero { padding: 24px 18px; }
+      .topbar-inner { align-items: flex-start; }
+      .nav { width: 100%; }
+      .nav button { flex: 1; }
+    }
+  </style>
 </head>
 
 <body>
-<header>
-  <div class="wrap brand">Freelancer <span>Itaúna</span></div>
-</header>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">FREELANCER <span>ITAÚNA</span></div>
+      <nav class="nav" aria-label="Menu principal">
+        <button type="button" onclick="irPara('vagas')">Vagas</button>
+        <button type="button" id="navLogin" onclick="mostrarAcesso()">Entrar</button>
+        <button type="button" id="navPanel" class="hidden" onclick="mostrarPainel()">Meu painel</button>
+        <button type="button" id="navLogout" class="hidden" onclick="sair()">Sair</button>
+      </nav>
+    </div>
+  </header>
 
-<main>
-<div id="home">
-  <div class="hero">
-    <div class="wrap">
-      <h1>Freelancer Itaúna</h1>
-      <p>Uma plataforma para conectar pessoas que precisam de serviços com profissionais disponíveis. Os cadastros e serviços passam pela aprovação da administração.</p>
-      <div class="actions center">
-        <a class="btn primary" href="#acesso" data-role="professional">Sou contratante</a>
-        <a class="btn secondary" href="#acesso" data-role="client">Sou freelancer</a>
+  <main>
+    <div id="globalMessage" aria-live="polite"></div>
+
+    <section class="hero">
+      <h1>Seu próximo trabalho começa aqui.</h1>
+      <p>
+        Encontre oportunidades freelancer em Itaúna e região.
+        Contratantes podem cadastrar vagas; freelancers podem se candidatar
+        e acompanhar a análise pelo sistema.
+      </p>
+      <div class="hero-actions">
+        <button class="btn btn-primary" type="button" onclick="irPara('vagas')">
+          Ver vagas disponíveis
+        </button>
+        <button class="btn btn-light" type="button" onclick="mostrarAcesso()">
+          Entrar ou cadastrar
+        </button>
       </div>
-    </div>
-  </div>
+    </section>
 
-  <section class="wrap">
-    <h2>Como podemos ajudar?</h2>
-    <div class="grid">
-      <article class="card">
-        <h2>Para contratantes</h2>
-        <p>Cadastre-se na plataforma e acompanhe os serviços cadastrados e as oportunidades disponíveis para sua conta.</p>
-        <button class="primary" type="button" data-role="professional">Criar conta de contratante</button>
-      </article>
-      <article class="card">
-        <h2>Para freelancers</h2>
-        <p>Cadastre-se para consultar os serviços disponíveis e enviar solicitações de contratação pela plataforma.</p>
-        <button class="secondary" type="button" data-role="client">Criar conta de freelancer</button>
-      </article>
-    </div>
-    <p class="note">Os cadastros e serviços dependem de aprovação da administração. Não informe telefones, senhas ou dados sensíveis nas descrições públicas.</p>
-  </section>
-</div>
+    <section id="accessSection" class="section hidden">
+      <h2>Entrar na plataforma</h2>
+      <p class="muted">
+        Para acessar os detalhes completos das vagas, sua conta precisa estar
+        aprovada e ativa.
+      </p>
 
-<section id="acesso" class="wrap">
-  <div class="two">
-    <div class="panel">
-      <h2>Criar conta</h2>
-      <form id="formCadastro">
-        <label for="cadName">Nome completo</label>
-        <input id="cadName" name="name" autocomplete="name" required minlength="2">
-
-        <label for="cadEmail">E-mail</label>
-        <input id="cadEmail" name="email" type="email" autocomplete="email" required>
-
-        <label for="cadPassword">Senha (mínimo 8 caracteres)</label>
-        <input id="cadPassword" name="password" type="password" minlength="8" autocomplete="new-password" required>
-
-        <label for="cadRole">Tipo de conta</label>
-        <select id="cadRole" name="role" required>
-          <option value="professional">Contratante</option>
-          <option value="client">Freelancer</option>
-        </select>
-
-        <button class="primary" type="submit">Enviar cadastro</button>
+      <form id="loginForm">
+        <div class="grid">
+          <div class="field full">
+            <label for="loginEmail">E-mail</label>
+            <input id="loginEmail" type="email" autocomplete="email" required>
+          </div>
+          <div class="field full">
+            <label for="loginPassword">Senha</label>
+            <input id="loginPassword" type="password"
+                   autocomplete="current-password" required>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" type="submit">Entrar</button>
+          <button class="btn btn-light" type="button" onclick="mostrarCadastro()">
+            Criar conta
+          </button>
+        </div>
       </form>
-      <p id="cadMsg" class="status" role="status" aria-live="polite"></p>
-    </div>
 
-    <div class="panel">
-      <h2>Já tenho conta</h2>
-      <form id="formLogin">
-        <label for="loginEmail">E-mail</label>
-        <input id="loginEmail" name="email" type="email" autocomplete="username" required>
+      <hr class="divider">
 
-        <label for="loginPassword">Senha</label>
-        <input id="loginPassword" name="password" type="password" autocomplete="current-password" required>
+      <div id="registerBox" class="hidden">
+        <h2>Criar uma conta</h2>
+        <div class="notice">
+          Selecione corretamente seu perfil. O cadastro ficará aguardando
+          aprovação do administrador.
+        </div>
 
-        <button class="primary" type="submit">Entrar</button>
-      </form>
-      <p id="loginMsg" class="status" role="status" aria-live="polite"></p>
-      <p class="small">Se o cadastro estiver pendente, aguarde a aprovação do administrador.</p>
-    </div>
-  </div>
-</section>
+        <form id="registerForm">
+          <div class="grid">
+            <div class="field">
+              <label for="regName">Nome completo</label>
+              <input id="regName" autocomplete="name" required minlength="3">
+            </div>
 
-<section id="painel" class="wrap hidden">
-  <div class="panel">
-    <div class="topline">
-      <div>
-        <h2 id="painelTitulo">Meu painel</h2>
-        <div id="identidade"></div>
+            <div class="field">
+              <label for="regPhone">Telefone / WhatsApp</label>
+              <input id="regPhone" type="tel" autocomplete="tel"
+                     placeholder="(37) 99999-9999" required>
+            </div>
+
+            <div class="field full">
+              <label for="regEmail">E-mail</label>
+              <input id="regEmail" type="email" autocomplete="email" required>
+            </div>
+
+            <div class="field">
+              <label for="regPassword">Senha (mínimo 8 caracteres)</label>
+              <input id="regPassword" type="password"
+                     autocomplete="new-password" minlength="8" required>
+            </div>
+
+            <div class="field">
+              <label for="regRole">Tipo de conta</label>
+              <select id="regRole" required>
+                <option value="client">Sou freelancer e quero encontrar vagas</option>
+                <option value="professional">Sou contratante e quero publicar vagas</option>
+                <option value="company">Sou empresa e quero publicar vagas</option>
+              </select>
+            </div>
+
+            <div class="field full">
+              <label for="regCity">Cidade</label>
+              <input id="regCity" value="Itaúna" autocomplete="address-level2">
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn btn-primary" type="submit">Enviar cadastro</button>
+            <button class="btn btn-light" type="button" onclick="mostrarLogin()">
+              Já tenho conta
+            </button>
+          </div>
+        </form>
       </div>
-      <button class="secondary" id="sair" type="button">Sair da conta</button>
-    </div>
-    <p id="contaStatus" class="status"></p>
-    <nav class="nav" id="navPainel" aria-label="Menu do painel"></nav>
-    <div id="painelConteudo"></div>
-  </div>
-</section>
+    </section>
 
-<section class="wrap" id="catalogo">
-  <div class="panel">
-    <h2>Serviços disponíveis</h2>
-    <p class="small">São exibidos serviços ativos de profissionais aprovados.</p>
-    <form id="formBusca">
-      <label for="buscaCidade">Filtrar por cidade</label>
-      <input id="buscaCidade" name="city" value="Itaúna" placeholder="Ex.: Itaúna">
-      <label for="buscaCategoria">Categoria</label>
-      <select id="buscaCategoria">
-        <option value="">Todas as categorias</option>
-      </select>
-      <button class="primary" type="submit">Buscar serviços</button>
-    </form>
-    <div id="listaServicos" aria-live="polite">
-      <p class="empty">Carregando serviços...</p>
-    </div>
-  </div>
-</section>
-</main>
+    <section id="vagas" class="section">
+      <h2>Vagas disponíveis</h2>
+      <p class="muted">
+        Visitantes veem apenas as informações básicas. Entre com uma conta
+        aprovada para consultar os detalhes da vaga.
+      </p>
 
-<footer>
-  <div class="wrap">Freelancer Itaúna · Conectando pessoas e serviços</div>
-</footer>
+      <div class="filters">
+        <div class="field">
+          <label for="filterCity">Cidade</label>
+          <input id="filterCity" value="Itaúna" placeholder="Ex.: Itaúna">
+        </div>
+        <div class="field">
+          <label for="filterCategory">Categoria</label>
+          <select id="filterCategory">
+            <option value="">Todas as categorias</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>&nbsp;</label>
+          <button class="btn btn-dark" type="button" onclick="carregarVagas()">
+            Buscar vagas
+          </button>
+        </div>
+      </div>
 
-<script>
-"use strict";
+      <div id="jobsMessage" aria-live="polite"></div>
+      <div id="jobsList" class="cards"></div>
+    </section>
 
-const API = "https://freelancer-itauna.onrender.com";
-const $ = id => document.getElementById(id);
-let user = null;
-let categories = [];
+    <section id="userPanel" class="section hidden">
+      <h2 id="panelTitle">Meu painel</h2>
+      <p id="userSummary" class="muted"></p>
 
-function token() {
-  return sessionStorage.getItem("freelancer_token") || "";
-}
+      <div id="freelancerPanel" class="hidden">
+        <h3>Minhas candidaturas</h3>
+        <p class="muted">Acompanhe as candidaturas enviadas e as decisões do administrador.</p>
+        <button class="btn btn-dark" type="button" onclick="carregarMinhasCandidaturas()">
+          Atualizar candidaturas
+        </button>
+        <div id="myApplications"></div>
+      </div>
 
-function esc(s) {
-  return String(s ?? "").replace(/[&<>"']/g, c => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-  }[c]));
-}
+      <div id="contractorPanel" class="hidden">
+        <h3>Cadastrar uma vaga</h3>
+        <div class="notice">
+          Os dados da vaga serão enviados para análise. Ela só aparecerá no
+          catálogo público depois de aprovada.
+        </div>
 
-function formData(form) {
-  return Object.fromEntries(new FormData(form));
-}
+        <form id="jobForm">
+          <div class="grid">
+            <div class="field">
+              <label for="jobTitle">Nome da vaga</label>
+              <input id="jobTitle" required minlength="3"
+                     placeholder="Ex.: Garçom freelancer">
+            </div>
 
-function msg(id, text) {
-  $(id).textContent = text;
-}
+            <div class="field">
+              <label for="jobEstablishment">Nome do estabelecimento</label>
+              <input id="jobEstablishment" required>
+            </div>
 
-async function api(route, options = {}) {
-  const headers = {...(options.headers || {})};
-  if (options.body) headers["Content-Type"] = "application/json";
-  if (token()) headers.Authorization = "Bearer " + token();
+            <div class="field">
+              <label for="jobNeighborhood">Bairro</label>
+              <input id="jobNeighborhood" required>
+            </div>
 
-  let response;
-  try {
-    response = await fetch(API + route, {...options, headers});
-  } catch {
-    throw new Error("Não foi possível conectar ao servidor. Confira a internet e tente novamente.");
-  }
+            <div class="field">
+              <label for="jobCity">Cidade</label>
+              <input id="jobCity" value="Itaúna" required>
+            </div>
 
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.mensagem || data.erro || `Erro ${response.status}`);
-  return data;
-}
+            <div class="field">
+              <label for="jobState">Estado</label>
+              <input id="jobState" value="MG" maxlength="2" required>
+            </div>
 
-// PAINEL E MENU
-function showPanel() {
-  if (!user) return;
+            <div class="field full">
+              <label for="jobAddress">Endereço completo do trabalho</label>
+              <input id="jobAddress" required
+                     placeholder="Rua, número e complemento">
+            </div>
 
-  $("painel").classList.remove("hidden");
-  $("home").classList.add("hidden");
-  $("acesso").classList.add("hidden");
+            <div class="field">
+              <label for="jobDate">Data do trabalho</label>
+              <input id="jobDate" type="date" required>
+            </div>
 
-  const titles = {
-    admin: "Painel administrativo",
-    client: "PAINEL DO TRABALHADOR",
-    professional: "PAINEL DO CONTRATANTE",
-    company: "Painel da empresa"
-  };
+            <div class="field">
+              <label for="jobHours">Horário</label>
+              <input id="jobHours" required
+                     placeholder="Ex.: 18h às 23h">
+            </div>
 
-  const accountTypes = {
-    admin: "Administrador",
-    client: "FREELANCER",
-    professional: "CONTRATANTE",
-    company: "Empresa"
-  };
+            <div class="field">
+              <label for="jobPrice">Valor por freelancer (R$)</label>
+              <input id="jobPrice" type="number" min="0" step="0.01" required>
+            </div>
 
-  $("painelTitulo").textContent = titles[user.role] || "Meu painel";
-  $("identidade").textContent = `${user.name || ""} · ${user.email || ""}`;
-  $("contaStatus").textContent =
-    `Conta aprovada. Tipo de conta: ${accountTypes[user.role] || user.role}.`;
+            <div class="field">
+              <label for="jobQuantity">Quantidade de freelancers</label>
+              <input id="jobQuantity" type="number" min="1" max="500"
+                     value="1" step="1" required>
+            </div>
 
-  buildNav();
-  renderDefault();
-  $("painel").scrollIntoView({behavior:"smooth", block:"start"});
-}
+            <div class="field full">
+              <label for="jobCategory">Categoria</label>
+              <select id="jobCategory" required>
+                <option value="">Carregando categorias...</option>
+              </select>
+            </div>
 
-function buildNav() {
-  const nav = $("navPainel");
-  nav.replaceChildren();
-  const items = [["Início","inicio"]];
+            <div class="field full">
+              <label for="jobDescription">Descrição e requisitos</label>
+              <textarea id="jobDescription" required
+                        placeholder="Descreva as tarefas e os requisitos da vaga. Não informe telefone ou e-mail aqui."></textarea>
+            </div>
+          </div>
 
-  if (["professional","company"].includes(user.role)) {
-    items.push(["Meu perfil","perfil"],["Cadastrar serviço","novo-servico"],["Minhas oportunidades","oportunidades"]);
-  }
-  if (user.role === "client") items.push(["Minhas solicitações","contratacoes"]);
-  if (user.role === "admin") {
-    items.push(["Aprovar cadastros","pendentes"],["Aprovar serviços","servicos-pendentes"],["Solicitações","admin-contratacoes"],["Usuários","usuarios"]);
-  }
-  items.push(["Ver serviços","catalogo"]);
+          <div class="actions">
+            <button class="btn btn-primary" type="submit">Enviar vaga para aprovação</button>
+          </div>
+        </form>
+      </div>
 
-  items.forEach(([label, action]) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "secondary";
-    button.textContent = label;
-    button.addEventListener("click", () => {
-      if (action === "catalogo") {
-        $("catalogo").scrollIntoView({behavior:"smooth"});
+      <div id="adminPanel" class="hidden">
+        <h3>Administração</h3>
+        <p class="muted">
+          Analise cadastros, vagas e candidaturas. Dados privados de contato
+          devem ser consultados apenas nesta área administrativa.
+        </p>
+
+        <div class="actions">
+          <button class="btn btn-dark" type="button" onclick="carregarCadastrosPendentes()">
+            Cadastros pendentes
+          </button>
+          <button class="btn btn-dark" type="button" onclick="carregarVagasPendentes()">
+            Vagas pendentes
+          </button>
+          <button class="btn btn-dark" type="button" onclick="carregarCandidaturasAdmin()">
+            Candidaturas
+          </button>
+        </div>
+
+        <hr class="divider">
+        <h3>Cadastros para aprovação</h3>
+        <div id="pendingUsers"></div>
+
+        <hr class="divider">
+        <h3>Vagas para aprovação</h3>
+        <div id="pendingJobs"></div>
+
+        <hr class="divider">
+        <h3>Análise de candidaturas e atribuição</h3>
+        <div id="adminApplications"></div>
+      </div>
+
+      <div id="panelMessage" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <strong>Freelancer Itaúna</strong><br>
+    Conectando oportunidades e profissionais com mais organização.
+  </footer>
+
+  <script>
+    "use strict";
+
+    const API = "https://freelancer-itauna.onrender.com";
+
+    let token = localStorage.getItem("fi_token") || "";
+    let user = null;
+    let categories = [];
+
+    const $ = (id) => document.getElementById(id);
+
+    function escapeHTML(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      })[char]);
+    }
+
+    function money(value) {
+      const number = Number(value);
+      if (!Number.isFinite(number)) return "A combinar";
+      return number.toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL"
+      });
+    }
+
+    function dateBR(value) {
+      if (!value) return "Não informada";
+      const raw = String(value).slice(0, 10);
+      const parts = raw.split("-");
+      if (parts.length !== 3) return escapeHTML(value);
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+
+    function showMessage(targetId, message, type = "info") {
+      const target = $(targetId);
+      if (!target) return;
+      target.innerHTML = message
+        ? `<div class="message ${escapeHTML(type)}">${escapeHTML(message)}</div>`
+        : "";
+    }
+
+    function showGlobal(message, type = "info") {
+      showMessage("globalMessage", message, type);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function irPara(id) {
+      $(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function mostrarAcesso() {
+      $("accessSection").classList.remove("hidden");
+      $("registerBox").classList.add("hidden");
+      irPara("accessSection");
+    }
+
+    function mostrarCadastro() {
+      $("accessSection").classList.remove("hidden");
+      $("registerBox").classList.remove("hidden");
+      irPara("accessSection");
+    }
+
+    function mostrarLogin() {
+      $("accessSection").classList.remove("hidden");
+      $("registerBox").classList.add("hidden");
+      irPara("accessSection");
+    }
+
+    function mostrarPainel() {
+      if (!user) {
+        mostrarAcesso();
         return;
       }
-      renderSection(action);
-    });
-    nav.append(button);
-  });
-}
+      $("userPanel").classList.remove("hidden");
+      irPara("userPanel");
+    }
 
-function renderDefault() {
-  if (user.role === "admin") renderSection("pendentes");
-  else if (user.role === "client") renderSection("contratacoes");
-  else renderSection("perfil");
-}
+    function authHeaders() {
+      const headers = { "Content-Type": "application/json" };
+      if (token) headers.Authorization = `Bearer ${token}`;
+      return headers;
+    }
 
-function renderSection(action) {
-  const root = $("painelConteudo");
-  root.replaceChildren();
+    async function api(path, options = {}) {
+      const config = {
+        method: options.method || "GET",
+        headers: {
+          ...authHeaders(),
+          ...(options.headers || {})
+        }
+      };
 
-  if (action === "inicio") {
-    root.innerHTML = "<h3>Bem-vindo ao seu painel</h3><p>Use os botões acima para acessar as funções disponíveis para sua conta.</p>";
-    return;
-  }
-
-  if (action === "perfil") return renderProfile(root);
-  if (action === "novo-servico") return renderNewService(root);
-  if (action === "oportunidades") return loadOpportunities(root);
-  if (action === "contratacoes") return loadClientRequests(root);
-  if (action === "pendentes") return loadPending(root);
-  if (action === "servicos-pendentes") return loadPendingServices(root);
-  if (action === "admin-contratacoes") return loadAdminRequests(root);
-  if (action === "usuarios") return loadUsers(root);
-}
-
-function field(label, name, placeholder = "", type = "text", required = false) {
-  return `<label>${esc(label)}
-    <input name="${esc(name)}" type="${esc(type)}" placeholder="${esc(placeholder)}" ${required ? "required" : ""}>
-  </label>`;
-}
-
-// PERFIL
-async function renderProfile(root) {
-  root.innerHTML = `
-    <h3>Meu perfil profissional</h3>
-    <p class="small">Preencha e salve os dados associados à sua conta.</p>
-    <p class="status" id="perfilMsg">Carregando perfil...</p>
-    <form id="perfilForm">
-      ${field("Profissão ou atividade principal","profession","Ex.: Eletricista","text",true)}
-      <label>Descrição<textarea name="description" placeholder="Conte sobre seu trabalho"></textarea></label>
-      ${field("Experiência","experience","Ex.: 5 anos")}
-      ${field("Valor por hora (opcional)","hourly_rate","Ex.: 50","number")}
-      ${field("Disponibilidade","availability","Ex.: Segunda a sábado")}
-      ${field("Região de atendimento","address","Ex.: Itaúna e região")}
-      <button class="primary" type="submit">Salvar perfil</button>
-    </form>`;
-
-  try {
-    const data = await api("/perfil-profissional");
-    if (data.perfil) {
-      const form = $("perfilForm");
-      for (const key of ["profession","description","experience","hourly_rate","availability","address"]) {
-        if (data.perfil[key] != null && form.elements[key]) form.elements[key].value = data.perfil[key];
+      if (options.body !== undefined) {
+        config.body = typeof options.body === "string"
+          ? options.body
+          : JSON.stringify(options.body);
       }
-      msg("perfilMsg","Perfil carregado. Você pode atualizar os campos.");
-    } else {
-      msg("perfilMsg","Seu perfil ainda não foi cadastrado. Preencha os campos abaixo.");
-    }
-  } catch (e) {
-    msg("perfilMsg",e.message);
-  }
 
-  $("perfilForm").onsubmit = async ev => {
-    ev.preventDefault();
-    const form = ev.currentTarget;
-    const button = ev.submitter;
-    button.disabled = true;
-    try {
-      const data = await api("/perfil-profissional", {
-        method:"PUT", body:JSON.stringify(formData(form))
-      });
-      msg("perfilMsg",data.mensagem || "Perfil salvo.");
-    } catch (e) {
-      msg("perfilMsg",e.message);
-    } finally {
-      button.disabled = false;
-    }
-  };
-}
+      let response;
+      try {
+        response = await fetch(API + path, config);
+      } catch (error) {
+        throw new Error(
+          "Não foi possível conectar ao servidor. Verifique sua internet e tente novamente."
+        );
+      }
 
-// CADASTRAR SERVIÇO
-async function renderNewService(root) {
-  root.innerHTML = `
-    <h3>Cadastrar serviço</h3>
-    <p class="small">O serviço ficará pendente e só aparecerá no catálogo depois da aprovação da administração.</p>
-    <p id="servicoMsg" class="status" role="status" aria-live="polite"></p>
-    <form id="servicoForm">
-      ${field("Título do serviço","title","Ex.: Instalação elétrica","text",true)}
-      <label>Descrição<textarea name="description" required placeholder="Descreva o serviço oferecido"></textarea></label>
-      ${field("Preço em reais (use 0 se for a combinar)","price","0","number",true)}
-      ${field("Cidade","city","Itaúna","text",true)}
-      ${field("Estado","state","MG","text",true)}
-      <label>Categoria
-        <select name="category_id" id="serviceCategory" required>
-          <option value="">Carregando categorias...</option>
-        </select>
-      </label>
-      <button class="primary" type="submit">Enviar para aprovação</button>
-    </form>`;
+      const text = await response.text();
+      let data = {};
 
-  await fillCategorySelect($("serviceCategory"));
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        data = { mensagem: text || "Resposta inválida do servidor." };
+      }
 
-  $("servicoForm").onsubmit = async ev => {
-    ev.preventDefault();
-    const form = ev.currentTarget;
-    const button = ev.submitter;
-    button.disabled = true;
+      if (!response.ok) {
+        if (response.status === 401 && token) {
+          token = "";
+          user = null;
+          localStorage.removeItem("fi_token");
+          atualizarInterface();
+        }
 
-    try {
-      const data = formData(form);
-      if (data.price === "") throw new Error("Informe um preço ou coloque 0 se for a combinar.");
-      const result = await api("/servicos",{method:"POST",body:JSON.stringify(data)});
-      msg("servicoMsg",result.mensagem || "Serviço enviado para aprovação.");
-      form.reset();
-    } catch (e) {
-      msg("servicoMsg",e.message);
-    } finally {
-      button.disabled = false;
-    }
-  };
-}
+        throw new Error(
+          data.mensagem || data.message || data.erro ||
+          `O servidor respondeu com erro ${response.status}.`
+        );
+      }
 
-// CATEGORIAS
-async function fillCategorySelect(select) {
-  try {
-    const data = await api("/categorias");
-    categories = data.categorias || [];
-    const options = categories.map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join("");
-    select.innerHTML = select.id === "buscaCategoria"
-      ? '<option value="">Todas as categorias</option>' + options
-      : '<option value="">Selecione uma categoria</option>' + options;
-  } catch {
-    select.innerHTML = '<option value="">Categorias indisponíveis</option>';
-  }
-}
-
-// CATÁLOGO PÚBLICO
-async function loadServices(city = "", category = "") {
-  const root = $("listaServicos");
-  root.innerHTML = '<p class="empty">Buscando serviços...</p>';
-
-  try {
-    const params = new URLSearchParams();
-    if (city) params.set("city",city);
-    if (category) params.set("category_id",category);
-
-    const data = await api("/servicos?" + params.toString());
-    root.replaceChildren();
-
-    if (!data.servicos || !data.servicos.length) {
-      root.innerHTML = '<p class="empty">Nenhum serviço encontrado com esses filtros.</p>';
-      return;
+      return data;
     }
 
-    data.servicos.forEach(service => {
-      const item = document.createElement("article");
-      item.className = "item";
-      item.innerHTML = `
-        <h3>${esc(service.title)}</h3>
-        <p>${esc(service.description)}</p>
-        <p><span class="tag">${esc(service.category_name || "Serviço")}</span></p>
-        <p>Profissional: ${esc(service.professional_name || "Profissional aprovado")}</p>
-        <p>Local: ${esc(service.city || "")} / ${esc(service.state || "")}</p>
-        <p class="price">${Number(service.price) === 0 ? "Preço a combinar" : "R$ " + Number(service.price).toLocaleString("pt-BR",{minimumFractionDigits:2})}</p>`;
+    function normalizarUsuario(data) {
+      return data.usuario || data.user || data;
+    }
 
-      if (user?.role === "client") {
-        const button = document.createElement("button");
-        button.className = "primary";
-        button.textContent = "QUERO ESSE SERVIÇO";
-        button.addEventListener("click",() => requestHiring(service.id,service.title));
-        item.append(button);
-      } else if (!user) {
-        const button = document.createElement("button");
-        button.className = "secondary";
-        button.textContent = "QUERO ESSE SERVIÇO";
-        button.addEventListener("click",() => {
-          $("cadRole").value = "client";
-          $("acesso").scrollIntoView({behavior:"smooth"});
+    function atualizarInterface() {
+      const logged = Boolean(token && user);
+
+      $("navLogin").classList.toggle("hidden", logged);
+      $("navPanel").classList.toggle("hidden", !logged);
+      $("navLogout").classList.toggle("hidden", !logged);
+
+      $("userPanel").classList.toggle("hidden", !logged);
+      $("freelancerPanel").classList.add("hidden");
+      $("contractorPanel").classList.add("hidden");
+      $("adminPanel").classList.add("hidden");
+
+      if (!logged) {
+        $("panelTitle").textContent = "Meu painel";
+        $("userSummary").textContent = "";
+        return;
+      }
+
+      $("panelTitle").textContent = `Olá, ${user.name || "usuário"}`;
+      $("userSummary").textContent =
+        `Perfil: ${nomePerfil(user.role)}. ` +
+        `Status: ${user.approval_status || "aprovado"}.`;
+
+      if (user.role === "client") {
+        $("freelancerPanel").classList.remove("hidden");
+        carregarMinhasCandidaturas();
+      } else if (["professional", "company"].includes(user.role)) {
+        $("contractorPanel").classList.remove("hidden");
+      } else if (user.role === "admin") {
+        $("adminPanel").classList.remove("hidden");
+      }
+    }
+
+    function nomePerfil(role) {
+      return ({
+        client: "Freelancer",
+        professional: "Contratante",
+        company: "Empresa contratante",
+        admin: "Administrador"
+      })[role] || "Usuário";
+    }
+
+    async function verificarSessao() {
+      if (!token) {
+        atualizarInterface();
+        return;
+      }
+
+      try {
+        const data = await api("/me");
+        user = normalizarUsuario(data);
+        atualizarInterface();
+      } catch (error) {
+        token = "";
+        user = null;
+        localStorage.removeItem("fi_token");
+        atualizarInterface();
+      }
+    }
+
+    $("loginForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      showMessage("globalMessage", "");
+
+      try {
+        const data = await api("/login", {
+          method: "POST",
+          body: {
+            email: $("loginEmail").value.trim(),
+            password: $("loginPassword").value
+          }
         });
-        item.append(button);
+
+        token = data.token;
+        user = normalizarUsuario(data);
+        localStorage.setItem("fi_token", token);
+
+        $("loginForm").reset();
+        $("accessSection").classList.add("hidden");
+        atualizarInterface();
+        await carregarVagas();
+
+        showGlobal("Login realizado com sucesso.", "success");
+        irPara("userPanel");
+      } catch (error) {
+        showGlobal(error.message, "error");
+      }
+    });
+
+    $("registerForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const body = {
+        name: $("regName").value.trim(),
+        phone: $("regPhone").value.trim(),
+        email: $("regEmail").value.trim(),
+        password: $("regPassword").value,
+        role: $("regRole").value,
+        city: $("regCity").value.trim() || "Itaúna",
+        state: "MG"
+      };
+
+      try {
+        const data = await api("/cadastro", {
+          method: "POST",
+          body
+        });
+
+        $("registerForm").reset();
+        $("regCity").value = "Itaúna";
+        mostrarLogin();
+
+        showGlobal(
+          data.mensagem ||
+          "Cadastro recebido. Aguarde a aprovação do administrador.",
+          "success"
+        );
+      } catch (error) {
+        showGlobal(error.message, "error");
+      }
+    });
+
+    function sair() {
+      token = "";
+      user = null;
+      localStorage.removeItem("fi_token");
+      atualizarInterface();
+      carregarVagas();
+      showGlobal("Você saiu da sua conta.", "success");
+    }
+
+    async function carregarCategorias() {
+      try {
+        const data = await api("/categorias");
+        categories = data.categorias || data.categories || data.dados || [];
+
+        const options = [
+          '<option value="">Selecione uma categoria</option>',
+          ...categories.map((item) =>
+            `<option value="${escapeHTML(item.id)}">${escapeHTML(item.name)}</option>`
+          )
+        ].join("");
+
+        $("jobCategory").innerHTML = options;
+        $("filterCategory").innerHTML =
+          '<option value="">Todas as categorias</option>' +
+          categories.map((item) =>
+            `<option value="${escapeHTML(item.id)}">${escapeHTML(item.name)}</option>`
+          ).join("");
+      } catch (error) {
+        $("jobCategory").innerHTML =
+          '<option value="">Não foi possível carregar as categorias</option>';
+        showMessage("panelMessage", error.message, "error");
+      }
+    }
+
+    async function carregarVagas() {
+      $("jobsList").innerHTML = "";
+      showMessage("jobsMessage", "Carregando vagas...");
+
+      const params = new URLSearchParams();
+      const city = $("filterCity").value.trim();
+      const category = $("filterCategory").value;
+
+      if (city) params.set("city", city);
+      if (category) params.set("category_id", category);
+
+      try {
+        const data = await api(`/servicos?${params.toString()}`);
+        const jobs = data.servicos || data.vagas || [];
+
+        showMessage(
+          "jobsMessage",
+          jobs.length ? `${jobs.length} vaga(s) encontrada(s).` :
+            "Nenhuma vaga disponível com esses filtros.",
+          jobs.length ? "success" : "info"
+        );
+
+        $("jobsList").innerHTML = jobs.map((job) => {
+          const detailsVisible = Boolean(
+            user && ["client", "admin"].includes(user.role)
+          );
+
+          let html = `
+            <article class="job-card">
+              <h3>${escapeHTML(job.title)}</h3>
+              <p class="job-value">${money(job.price)}</p>
+              <p><strong>Data:</strong> ${dateBR(job.work_date)}</p>
+              <p><strong>Horário:</strong> ${escapeHTML(job.work_hours || "A combinar")}</p>
+          `;
+
+          if (detailsVisible) {
+            html += `
+              <hr class="divider">
+              <p><strong>Estabelecimento:</strong> ${escapeHTML(job.establishment_name || "Não informado")}</p>
+              <p><strong>Bairro:</strong> ${escapeHTML(job.neighborhood || "Não informado")}</p>
+              <p><strong>Endereço:</strong> ${escapeHTML(job.job_address || "Não informado")}</p>
+              <p><strong>Cidade:</strong> ${escapeHTML(job.city || "")} - ${escapeHTML(job.state || "")}</p>
+              <p><strong>Quantidade necessária:</strong> ${escapeHTML(job.vacancies_count ?? 1)}</p>
+              <p><strong>Descrição:</strong><br>${escapeHTML(job.description || "Sem descrição").replace(/\n/g, "<br>")}</p>
+            `;
+          } else {
+            html += `
+              <p class="muted small">
+                Entre com uma conta de freelancer aprovada para consultar
+                o estabelecimento, o endereço e a descrição.
+              </p>
+            `;
+          }
+
+          if (user?.role === "client") {
+            html += `
+              <div class="actions">
+                <button class="btn btn-primary" type="button"
+                  onclick="candidatar('${escapeHTML(job.id)}')">
+                  QUERO ESSA VAGA
+                </button>
+              </div>
+            `;
+          } else if (!user) {
+            html += `
+              <div class="actions">
+                <button class="btn btn-dark" type="button" onclick="mostrarAcesso()">
+                  Entrar para ver detalhes
+                </button>
+              </div>
+            `;
+          }
+
+          html += "</article>";
+          return html;
+        }).join("");
+      } catch (error) {
+        showMessage("jobsMessage", error.message, "error");
+      }
+    }
+
+    async function candidatar(serviceId) {
+      if (!user || user.role !== "client") {
+        showGlobal("Entre com uma conta de freelancer aprovada para se candidatar.", "error");
+        mostrarAcesso();
+        return;
       }
 
-      root.append(item);
-    });
-  } catch (e) {
-    root.innerHTML = `<p class="status">${esc(e.message)}</p>`;
-  }
-}
+      if (!confirm("Deseja enviar sua candidatura para esta vaga?")) return;
 
-async function requestHiring(serviceId,title) {
-  const details = prompt(`Explique o que precisa para o serviço "${title}" (mínimo 10 caracteres). Não informe telefone ou e-mail.`);
-  if (details === null) return;
-  if (details.trim().length < 10) {
-    alert("Escreva pelo menos 10 caracteres.");
-    return;
-  }
+      try {
+        const data = await api("/contratacoes", {
+          method: "POST",
+          body: {
+            service_id: serviceId,
+            details: "Tenho interesse nesta vaga."
+          }
+        });
 
-  try {
-    const data = await api("/contratacoes",{
-      method:"POST",
-      body:JSON.stringify({service_id:serviceId,details:details.trim()})
-    });
-    alert(data.mensagem || "Solicitação enviada.");
-    renderSection("contratacoes");
-  } catch (e) {
-    alert(e.message);
-  }
-}
-
-// SOLICITAÇÕES DO CLIENTE
-async function loadClientRequests(root) {
-  root.innerHTML = '<h3>Minhas solicitações</h3><p id="reqMsg" class="status">Carregando...</p><div id="reqList"></div>';
-
-  try {
-    const data = await api("/minhas-contratacoes");
-    const requests = data.solicitacoes || [];
-    msg("reqMsg",`${requests.length} solicitação(ões). A administração acompanha cada pedido.`);
-    const list = $("reqList");
-
-    if (!requests.length) {
-      list.innerHTML = '<p class="empty">Você ainda não enviou solicitações.</p>';
-      return;
+        showGlobal(
+          data.mensagem || "Candidatura enviada para análise do administrador.",
+          "success"
+        );
+        await carregarMinhasCandidaturas();
+      } catch (error) {
+        showGlobal(error.message, "error");
+      }
     }
 
-    list.innerHTML = requests.map(item => `
-      <article class="item">
-        <h3>${esc(item.service_title)}</h3>
-        <p>${esc(item.details)}</p>
-        <p>Status: <b>${esc(item.status)}</b></p>
-        <p class="small">Enviada: ${new Date(item.created_at).toLocaleString("pt-BR")}</p>
-      </article>`).join("");
-  } catch (e) {
-    msg("reqMsg",e.message);
-  }
-}
+    $("jobForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
 
-// OPORTUNIDADES DO PROFISSIONAL
-async function loadOpportunities(root) {
-  root.innerHTML = '<h3>Minhas oportunidades</h3><p id="oppMsg" class="status">Carregando...</p><div id="oppList"></div>';
+      if (!user || !["professional", "company"].includes(user.role)) {
+        showGlobal("Entre com uma conta de contratante aprovada.", "error");
+        return;
+      }
 
-  try {
-    const data = await api("/minhas-oportunidades");
-    const opportunities = data.oportunidades || [];
-    msg("oppMsg",`${opportunities.length} oportunidade(s) atribuída(s) pela administração.`);
-    $("oppList").innerHTML = opportunities.length
-      ? opportunities.map(item => `<article class="item"><h3>${esc(item.service_title)}</h3><p>${esc(item.details)}</p><p>Status: <b>${esc(item.status)}</b></p></article>`).join("")
-      : '<p class="empty">Nenhuma oportunidade atribuída ainda.</p>';
-  } catch (e) {
-    msg("oppMsg",e.message);
-  }
-}
-
-// ADMINISTRAÇÃO: CADASTROS PENDENTES
-async function loadPending(root) {
-  root.innerHTML = '<h3>Cadastros aguardando aprovação</h3><p id="adminMsg" class="status">Carregando...</p><div id="adminList"></div>';
-
-  try {
-    const data = await api("/admin/usuarios-pendentes");
-    const users = data.usuarios || [];
-    msg("adminMsg",`${users.length} cadastro(s) pendente(s).`);
-    const list = $("adminList");
-
-    if (!users.length) {
-      list.innerHTML = '<p class="empty">Nenhum cadastro pendente.</p>';
-      return;
-    }
-
-    list.innerHTML = users.map(u => `
-      <article class="item">
-        <h3>${esc(u.name)}</h3><p>${esc(u.email)}</p>
-        <p>Tipo interno: ${esc(u.role)}</p><p>Status: ${esc(u.approval_status)}</p>
-        <div class="actions">
-          <button class="primary" data-id="${esc(u.id)}" data-status="approved">Aprovar</button>
-          <button class="danger" data-id="${esc(u.id)}" data-status="rejected">Rejeitar</button>
-        </div>
-      </article>`).join("");
-
-    list.querySelectorAll("button").forEach(button => {
-      button.onclick = async () => {
-        const approved = button.dataset.status === "approved";
-        if (!confirm(`Confirma ${approved ? "a aprovação" : "a rejeição"} deste cadastro?`)) return;
-        button.disabled = true;
-        try {
-          await api("/admin/usuarios/" + encodeURIComponent(button.dataset.id) + "/aprovacao",{
-            method:"PATCH",body:JSON.stringify({status:button.dataset.status})
-          });
-          await loadPending(root);
-        } catch (e) {
-          msg("adminMsg",e.message);
-          button.disabled = false;
-        }
+      const body = {
+        title: $("jobTitle").value.trim(),
+        establishment_name: $("jobEstablishment").value.trim(),
+        neighborhood: $("jobNeighborhood").value.trim(),
+        job_address: $("jobAddress").value.trim(),
+        city: $("jobCity").value.trim(),
+        state: $("jobState").value.trim().toUpperCase(),
+        work_date: $("jobDate").value,
+        work_hours: $("jobHours").value.trim(),
+        price: Number($("jobPrice").value),
+        vacancies_count: Number($("jobQuantity").value),
+        category_id: $("jobCategory").value,
+        description: $("jobDescription").value.trim()
       };
+
+      if (!body.category_id) {
+        showMessage("panelMessage", "Selecione uma categoria.", "error");
+        return;
+      }
+
+      if (!Number.isInteger(body.vacancies_count) || body.vacancies_count < 1) {
+        showMessage("panelMessage", "Informe uma quantidade válida de freelancers.", "error");
+        return;
+      }
+
+      try {
+        const data = await api("/servicos", {
+          method: "POST",
+          body
+        });
+
+        $("jobForm").reset();
+        $("jobCity").value = "Itaúna";
+        $("jobState").value = "MG";
+        $("jobQuantity").value = "1";
+
+        showMessage(
+          "panelMessage",
+          data.mensagem || "Vaga enviada para aprovação.",
+          "success"
+        );
+      } catch (error) {
+        showMessage("panelMessage", error.message, "error");
+      }
     });
-  } catch (e) {
-    msg("adminMsg",e.message);
-  }
-}
 
-// ADMINISTRAÇÃO: SERVIÇOS PENDENTES
-async function loadPendingServices(root) {
-  root.innerHTML = '<h3>Serviços aguardando aprovação</h3><p id="pendingServicesMsg" class="status">Carregando...</p><div id="pendingServicesList"></div>';
-
-  try {
-    const data = await api("/admin/servicos-pendentes");
-    const services = data.servicos || [];
-    msg("pendingServicesMsg",`${services.length} serviço(s) aguardando análise.`);
-    const list = $("pendingServicesList");
-
-    if (!services.length) {
-      list.innerHTML = '<p class="empty">Nenhum serviço aguardando aprovação.</p>';
-      return;
-    }
-
-    list.innerHTML = services.map(service => `
-      <article class="item">
-        <h3>${esc(service.title)}</h3><p>${esc(service.description)}</p>
-        <p>Profissional: ${esc(service.professional_name)}</p>
-        <p>E-mail cadastrado: ${esc(service.professional_email)}</p>
-        <p>Categoria: ${esc(service.category_name || "Não informada")}</p>
-        <p>Local: ${esc(service.city)} / ${esc(service.state)}</p>
-        <p class="price">${Number(service.price) === 0 ? "Preço a combinar" : "R$ " + Number(service.price).toLocaleString("pt-BR",{minimumFractionDigits:2})}</p>
-        <p>Status: <b>${esc(service.status)}</b></p>
-        <div class="actions">
-          <button class="primary" data-id="${esc(service.id)}" data-status="active">Aprovar serviço</button>
-          <button class="danger" data-id="${esc(service.id)}" data-status="rejected">Rejeitar serviço</button>
-        </div>
-      </article>`).join("");
-
-    list.querySelectorAll("button").forEach(button => {
-      button.onclick = async () => {
-        const approved = button.dataset.status === "active";
-        if (!confirm(`Confirma ${approved ? "a aprovação" : "a rejeição"} deste serviço?`)) return;
-        button.disabled = true;
-
-        try {
-          const result = await api("/admin/servicos/" + encodeURIComponent(button.dataset.id) + "/aprovacao",{
-            method:"PATCH",body:JSON.stringify({status:button.dataset.status})
-          });
-          msg("pendingServicesMsg",result.mensagem || "Serviço atualizado.");
-          await loadPendingServices(root);
-        } catch (e) {
-          msg("pendingServicesMsg",e.message);
-          button.disabled = false;
-        }
+    function rotuloStatus(status) {
+      const labels = {
+        pending: "Aguardando análise",
+        reviewing: "Em análise",
+        assigned: "Freelancer atribuído",
+        completed: "Concluída",
+        rejected: "Rejeitada",
+        approved: "Aprovado",
+        active: "Ativa",
+        inactive: "Inativa"
       };
-    });
-  } catch (e) {
-    msg("pendingServicesMsg",e.message);
-  }
-}
-
-// ADMINISTRAÇÃO: USUÁRIOS
-async function loadUsers(root) {
-  root.innerHTML = '<h3>Usuários cadastrados</h3><p id="usersMsg" class="status">Carregando...</p><div id="usersList"></div>';
-
-  try {
-    const data = await api("/admin/usuarios");
-    const users = data.usuarios || [];
-    msg("usersMsg",`${users.length} usuário(s).`);
-    $("usersList").innerHTML = users.length
-      ? users.map(u => `<article class="item"><b>${esc(u.name)}</b><p>${esc(u.email)}</p><p>Tipo interno: ${esc(u.role)}</p><p>Aprovação: ${esc(u.approval_status)}</p><p>Conta ativa: ${u.is_active ? "Sim" : "Não"}</p></article>`).join("")
-      : '<p class="empty">Nenhum usuário encontrado.</p>';
-  } catch (e) {
-    msg("usersMsg",e.message);
-  }
-}
-
-// ADMINISTRAÇÃO: SOLICITAÇÕES
-async function loadAdminRequests(root) {
-  root.innerHTML = '<h3>Solicitações de contratação</h3><p id="adminReqMsg" class="status">Carregando...</p><div id="adminReqList"></div>';
-
-  try {
-    const data = await api("/configuracao/solicitacoes");
-    const requests = data.solicitacoes || [];
-    msg("adminReqMsg",`${data.total || 0} solicitação(ões). Para atribuir uma oportunidade, informe o UUID de um profissional aprovado.`);
-    const list = $("adminReqList");
-
-    if (!requests.length) {
-      list.innerHTML = '<p class="empty">Nenhuma solicitação recebida.</p>';
-      return;
+      return labels[status] || status || "Não informado";
     }
 
-    list.innerHTML = requests.map(item => `
-      <article class="item">
-        <h3>Solicitação ${esc(item.id)}</h3>
-        <p>Serviço: ${esc(item.service_id)}</p><p>Cliente: ${esc(item.client_id)}</p>
-        <p>Descrição: ${esc(item.details)}</p><p>Status atual: <b>${esc(item.status)}</b></p>
-        <form data-request="${esc(item.id)}">
-          <label>UUID do profissional aprovado<input name="professional_id" placeholder="UUID do usuário aprovado"></label>
-          <label>Status
-            <select name="status">
-              <option value="pending">Pendente</option>
-              <option value="reviewing">Em análise</option>
-              <option value="assigned">Atribuída</option>
-              <option value="completed">Concluída</option>
-              <option value="rejected">Rejeitada</option>
-            </select>
-          </label>
-          <button class="primary" type="submit">Atualizar solicitação</button>
-        </form>
-      </article>`).join("");
+    function classeStatus(status) {
+      if (["approved", "active", "assigned", "completed"].includes(status)) {
+        return "status-approved";
+      }
+      if (["rejected", "inactive"].includes(status)) return "status-rejected";
+      return "status-pending";
+    }
 
-    list.querySelectorAll("form[data-request]").forEach(form => {
-      form.onsubmit = async ev => {
-        ev.preventDefault();
-        const button = ev.submitter;
-        button.disabled = true;
+    async function carregarMinhasCandidaturas() {
+      if (!user || user.role !== "client") return;
 
-        try {
-          const values = formData(form);
-          await api("/admin/contratacoes/" + encodeURIComponent(form.dataset.request),{
-            method:"PATCH",
-            body:JSON.stringify({status:values.status,professional_id:values.professional_id.trim() || null})
-          });
-          msg("adminReqMsg","Solicitação atualizada.");
-          await loadAdminRequests(root);
-        } catch (e) {
-          msg("adminReqMsg",e.message);
-          button.disabled = false;
+      try {
+        const data = await api("/minhas-contratacoes");
+        const rows = data.contratacoes || data.solicitacoes || data.dados || [];
+
+        $("myApplications").innerHTML = rows.length
+          ? rows.map((item) => `
+              <div class="item">
+                <h3>${escapeHTML(item.service_title || item.title || "Candidatura")}</h3>
+                <p><strong>Status:</strong>
+                  <span class="badge ${classeStatus(item.status)}">
+                    ${escapeHTML(rotuloStatus(item.status))}
+                  </span>
+                </p>
+                <p><strong>Enviada em:</strong> ${dateBR(item.created_at)}</p>
+              </div>
+            `).join("")
+          : '<p class="muted">Você ainda não enviou candidaturas.</p>';
+      } catch (error) {
+        $("myApplications").innerHTML =
+          `<div class="message error">${escapeHTML(error.message)}</div>`;
+      }
+    }
+
+    async function carregarCadastrosPendentes() {
+      try {
+        const data = await api("/admin/usuarios-pendentes");
+        const rows = data.usuarios || data.dados || [];
+
+        $("pendingUsers").innerHTML = rows.length
+          ? rows.map((item) => `
+              <div class="item">
+                <h3>${escapeHTML(item.name)}</h3>
+                <p><strong>Perfil:</strong> ${escapeHTML(nomePerfil(item.role))}</p>
+                <p><strong>E-mail:</strong> ${escapeHTML(item.email)}</p>
+                <p><strong>Telefone:</strong> ${escapeHTML(item.phone || "Não informado")}</p>
+                <p><strong>Status:</strong> ${escapeHTML(item.approval_status || "pending")}</p>
+                <div class="actions">
+                  <button class="btn btn-success" type="button"
+                    onclick="decidirCadastro('${escapeHTML(item.id)}','approved')">
+                    Aprovar
+                  </button>
+                  <button class="btn btn-danger" type="button"
+                    onclick="decidirCadastro('${escapeHTML(item.id)}','rejected')">
+                    Rejeitar
+                  </button>
+                </div>
+              </div>
+            `).join("")
+          : '<p class="muted">Nenhum cadastro pendente.</p>';
+      } catch (error) {
+        $("pendingUsers").innerHTML =
+          `<div class="message error">${escapeHTML(error.message)}</div>`;
+      }
+    }
+
+    async function decidirCadastro(id, status) {
+      if (!confirm(`Confirma a decisão: ${rotuloStatus(status)}?`)) return;
+
+      try {
+        const data = await api(`/admin/usuarios/${encodeURIComponent(id)}/aprovacao`, {
+          method: "PATCH",
+          body: { status }
+        });
+
+        showMessage("panelMessage", data.mensagem || "Cadastro atualizado.", "success");
+        await carregarCadastrosPendentes();
+      } catch (error) {
+        showMessage("panelMessage", error.message, "error");
+      }
+    }
+
+    async function carregarVagasPendentes() {
+      try {
+        const data = await api("/admin/servicos-pendentes");
+        const rows = data.servicos || data.vagas || [];
+
+        $("pendingJobs").innerHTML = rows.length
+          ? rows.map((job) => `
+              <div class="item">
+                <h3>${escapeHTML(job.title)}</h3>
+                <p><strong>Contratante:</strong> ${escapeHTML(job.professional_name || "Não informado")}</p>
+                <p><strong>E-mail do contratante:</strong> ${escapeHTML(job.professional_email || "Não informado")}</p>
+                <p><strong>Estabelecimento:</strong> ${escapeHTML(job.establishment_name || "Não informado")}</p>
+                <p><strong>Endereço:</strong> ${escapeHTML(job.job_address || "Não informado")}</p>
+                <p><strong>Data:</strong> ${dateBR(job.work_date)}</p>
+                <p><strong>Horário:</strong> ${escapeHTML(job.work_hours || "Não informado")}</p>
+                <p><strong>Valor:</strong> ${money(job.price)}</p>
+                <p><strong>Quantidade:</strong> ${escapeHTML(job.vacancies_count ?? 1)}</p>
+                <p><strong>Descrição:</strong><br>${escapeHTML(job.description || "").replace(/\n/g, "<br>")}</p>
+                <div class="actions">
+                  <button class="btn btn-success" type="button"
+                    onclick="decidirVaga('${escapeHTML(job.id)}','approved')">
+                    Aprovar vaga
+                  </button>
+                  <button class="btn btn-danger" type="button"
+                    onclick="decidirVaga('${escapeHTML(job.id)}','rejected')">
+                    Rejeitar vaga
+                  </button>
+                </div>
+              </div>
+            `).join("")
+          : '<p class="muted">Nenhuma vaga pendente.</p>';
+      } catch (error) {
+        $("pendingJobs").innerHTML =
+          `<div class="message error">${escapeHTML(error.message)}</div>`;
+      }
+    }
+
+    async function decidirVaga(id, status) {
+      if (!confirm(`Confirma a decisão para esta vaga: ${rotuloStatus(status)}?`)) return;
+
+      try {
+        const data = await api(`/admin/servicos/${encodeURIComponent(id)}/aprovacao`, {
+          method: "PATCH",
+          body: { status }
+        });
+
+        showMessage("panelMessage", data.mensagem || "Vaga atualizada.", "success");
+        await carregarVagasPendentes();
+        await carregarVagas();
+      } catch (error) {
+        showMessage("panelMessage", error.message, "error");
+      }
+    }
+
+    async function carregarCandidaturasAdmin() {
+      try {
+        const data = await api("/configuracao/solicitacoes");
+        const rows = data.solicitacoes || data.contratacoes || data.dados || [];
+
+        $("adminApplications").innerHTML = rows.length
+          ? rows.map((item) => `
+              <div class="item">
+                <h3>${escapeHTML(item.service_title || item.title || "Candidatura")}</h3>
+                <p><strong>Vaga (ID):</strong> ${escapeHTML(item.service_id)}</p>
+                <p><strong>Freelancer:</strong> ${escapeHTML(item.freelancer_name || item.client_name || item.candidate_name || "Confira o cadastro do candidato")}</p>
+                <p><strong>E-mail:</strong> ${escapeHTML(item.freelancer_email || item.client_email || item.candidate_email || "Não informado")}</p>
+                <p><strong>Telefone:</strong> ${escapeHTML(item.freelancer_phone || item.client_phone || item.candidate_phone || "Não informado")}</p>
+                <p><strong>Detalhes:</strong> ${escapeHTML(item.details || "Sem observações")}</p>
+                <p><strong>Status:</strong>
+                  <span class="badge ${classeStatus(item.status)}">${escapeHTML(rotuloStatus(item.status))}</span>
+                </p>
+
+                <div class="grid">
+                  <div class="field full">
+                    <label for="freelancer-${escapeHTML(item.id)}">ID do freelancer para atribuição</label>
+                    <input id="freelancer-${escapeHTML(item.id)}"
+                      value="${escapeHTML(item.assigned_professional_id || item.client_id || "")}"
+                      placeholder="ID do usuário freelancer">
+                  </div>
+                  <div class="field full">
+                    <label for="status-${escapeHTML(item.id)}">Decisão</label>
+                    <select id="status-${escapeHTML(item.id)}">
+                      <option value="pending" ${item.status === "pending" ? "selected" : ""}>Aguardando análise</option>
+                      <option value="reviewing" ${item.status === "reviewing" ? "selected" : ""}>Em análise</option>
+                      <option value="assigned" ${item.status === "assigned" ? "selected" : ""}>Atribuir freelancer</option>
+                      <option value="rejected" ${item.status === "rejected" ? "selected" : ""}>Rejeitar</option>
+                      <option value="completed" ${item.status === "completed" ? "selected" : ""}>Concluída</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="actions">
+                  <button class="btn btn-primary" type="button"
+                    onclick="salvarDecisaoCandidatura('${escapeHTML(item.id)}')">
+                    Salvar decisão
+                  </button>
+                </div>
+              </div>
+            `).join("")
+          : '<p class="muted">Nenhuma candidatura encontrada.</p>';
+      } catch (error) {
+        $("adminApplications").innerHTML =
+          `<div class="message error">${escapeHTML(error.message)}</div>`;
+      }
+    }
+
+    async function salvarDecisaoCandidatura(id) {
+      const status = $(`status-${id}`)?.value;
+      const freelancerId = $(`freelancer-${id}`)?.value.trim();
+
+      if (status === "assigned" && !freelancerId) {
+        showMessage("panelMessage", "Informe o ID do freelancer que será atribuído.", "error");
+        return;
+      }
+
+      if (!confirm("Confirma a atualização desta candidatura?")) return;
+
+      try {
+        const body = { status };
+
+        if (status === "assigned") {
+          body.assigned_professional_id = freelancerId;
         }
-      };
-    });
-  } catch (e) {
-    msg("adminReqMsg",e.message);
-  }
-}
 
-// CADASTRO
-$("formCadastro").onsubmit = async ev => {
-  ev.preventDefault();
-  const form = ev.currentTarget;
-  const button = ev.submitter;
-  button.disabled = true;
-  msg("cadMsg","Enviando cadastro...");
+        const data = await api(`/admin/contratacoes/${encodeURIComponent(id)}`, {
+          method: "PATCH",
+          body
+        });
 
-  try {
-    const data = await api("/cadastro",{method:"POST",body:JSON.stringify(formData(form))});
-    msg("cadMsg",data.mensagem || "Cadastro enviado.");
-    form.reset();
-  } catch (e) {
-    msg("cadMsg",e.message);
-  } finally {
-    button.disabled = false;
-  }
-};
-
-// LOGIN
-$("formLogin").onsubmit = async ev => {
-  ev.preventDefault();
-  const formulario = ev.currentTarget;
-  const button = ev.submitter;
-  button.disabled = true;
-  msg("loginMsg","Entrando...");
-
-  try {
-    const data = await api("/login",{method:"POST",body:JSON.stringify(formData(formulario))});
-    sessionStorage.setItem("freelancer_token",data.token);
-    user = data.usuario;
-    formulario.reset();
-    msg("loginMsg","Login realizado.");
-    showPanel();
-    loadServices($("buscaCidade").value.trim(),$("buscaCategoria").value);
-  } catch (e) {
-    msg("loginMsg",e.message);
-  } finally {
-    button.disabled = false;
-  }
-};
-
-// SAIR
-$("sair").onclick = () => {
-  sessionStorage.removeItem("freelancer_token");
-  user = null;
-  $("painel").classList.add("hidden");
-  $("home").classList.remove("hidden");
-  $("acesso").classList.remove("hidden");
-  msg("loginMsg","Você saiu da conta.");
-  loadServices($("buscaCidade").value.trim(),$("buscaCategoria").value);
-  window.scrollTo({top:0,behavior:"smooth"});
-};
-
-// SELEÇÃO DE CONTA
-document.querySelectorAll("[data-role]").forEach(element => {
-  element.addEventListener("click",() => {
-    const role = element.dataset.role;
-    if (["client","professional"].includes(role)) {
-      $("cadRole").value = role;
-      $("acesso").scrollIntoView({behavior:"smooth"});
+        showMessage("panelMessage", data.mensagem || "Candidatura atualizada.", "success");
+        await carregarCandidaturasAdmin();
+      } catch (error) {
+        showMessage("panelMessage", error.message, "error");
+      }
     }
-  });
-});
 
-// BUSCA
-$("formBusca").onsubmit = ev => {
-  ev.preventDefault();
-  loadServices($("buscaCidade").value.trim(),$("buscaCategoria").value);
-};
+    async function iniciar() {
+      await verificarSessao();
+      await carregarCategorias();
+      await carregarVagas();
+    }
 
-// INICIALIZAÇÃO
-(async () => {
-  await fillCategorySelect($("buscaCategoria"));
-  await loadServices("Itaúna");
-})();
-</script>
+    iniciar();
+  </script>
 </body>
 </html>
