@@ -381,10 +381,11 @@ app.get("/servicos", async (req, res, next) => {
 
     const values = [];
     const where = [
-      "s.status = 'active'",
-      "u.is_active = TRUE",
-      "u.approval_status = 'approved'"
-    ];
+  "s.status = 'active'",
+  "u.is_active = TRUE",
+  "u.approval_status = 'approved'",
+  "(s.expires_at IS NULL OR s.expires_at > NOW())"
+];
 
     if (city) {
       values.push("%" + city + "%");
