@@ -1064,10 +1064,11 @@ app.patch(
         }
 
         const candidateResult = await client.query(
-          `SELECT id, role, approval_status, is_active
+                  `SELECT id, role, approval_status, is_active
            FROM users
            WHERE id = $1
-           LIMIT 1`,
+           LIMIT 1
+           FOR UPDATE`,
           [assignedId]
         );
 
@@ -1090,6 +1091,25 @@ app.patch(
             "O usuário escolhido não é um freelancer aprovado e ativo."
           );
         }
+
+        const activeAssignmentResult = await client.query(
+          `SELECT id
+           FROM hiring_requests
+           WHERE assigned_professional_id = $1
+             AND status = 'assigned'
+             AND id <> $2
+           LIMIT 1`,
+          [assignedId, requestId]
+        );
+
+        if (activeAssignmentResult.rowCount > 0) {
+          await client.query("ROLLBACK");
+          return fail(
+            res,
+            409,
+            "Este freelancer já possui uma vaga atribuída. Ele só poderá receber outra após a conclusão ou liberação da vaga atual."
+          );
+}
 
         const applicationResult = await client.query(
           `SELECT id, status
