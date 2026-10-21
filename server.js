@@ -899,6 +899,7 @@ app.post(
         `SELECT id, vacancies_count
          FROM services
          WHERE id = $1 AND status = 'active'
+  AND (expires_at IS NULL OR expires_at > NOW())
          FOR UPDATE`,
         [serviceId]
       );
