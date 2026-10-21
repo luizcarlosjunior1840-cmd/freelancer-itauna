@@ -905,6 +905,31 @@ app.patch(
   }
 );
   
+app.get(
+  "/admin/servicos-publicados",
+  auth,
+  currentUser,
+  adminOnly,
+  async (req, res, next) => {
+    try {
+      const result = await pool.query(
+        `SELECT id, title, price, city, state, status, created_at
+         FROM services
+         WHERE status = 'active'
+         ORDER BY created_at DESC
+         LIMIT 200`
+      );
+
+      return res.json({
+        sucesso: true,
+        servicos: result.rows
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+  
 /* =====================================================
    CANDIDATURAS ÀS VAGAS
 ===================================================== */
