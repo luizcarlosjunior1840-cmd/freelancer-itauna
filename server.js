@@ -654,6 +654,62 @@ app.get(
   }
 );
 
+/* =====================================================
+   RESUMO DO PAINEL ADMINISTRATIVO
+===================================================== */
+
+app.get(
+  "/admin/resumo",
+  auth,
+  currentUser,
+  adminOnly,
+  async (req, res, next) => {
+    try {
+      const result = await pool.query(`
+        SELECT
+          (SELECT COUNT(*)::int
+           FROM users
+           WHERE role <> 'admin') AS total_usuarios,
+
+          (SELECT COUNT(*)::int
+           FROM users
+           WHERE role = 'client') AS total_freelancers,
+
+          (SELECT COUNT(*)::int
+           FROM users
+           WHERE role = 'professional') AS total_contratantes,
+
+          (SELECT COUNT(*)::int
+           FROM users
+           WHERE role = 'company') AS total_empresas,
+
+          (SELECT COUNT(*)::int
+           FROM services
+           WHERE status = 'pending') AS vagas_pendentes,
+
+          (SELECT COUNT(*)::int
+           FROM hiring_requests
+           WHERE status = 'pending') AS candidaturas_pendentes,
+
+          (SELECT COUNT(*)::int
+           FROM hiring_requests
+           WHERE status = 'assigned') AS servicos_em_andamento,
+
+          (SELECT COUNT(*)::int
+           FROM hiring_requests
+           WHERE status = 'completed') AS servicos_concluidos
+      `);
+
+      return res.json({
+        sucesso: true,
+        resumo: result.rows[0]
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 app.get(
   "/admin/usuarios",
   auth,
