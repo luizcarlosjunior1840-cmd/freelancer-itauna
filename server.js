@@ -905,6 +905,48 @@ app.patch(
   }
 );
   
+app.patch(
+  "/admin/servicos/:id/reativar",
+  auth,
+  currentUser,
+  adminOnly,
+  async (req, res, next) => {
+    try {
+      const id = req.params.id;
+
+      if (!validUUID(id)) {
+        return fail(res, 400, "ID de vaga inválido.");
+      }
+
+      const result = await pool.query(
+        `UPDATE services
+         SET status = 'active',
+             updated_at = NOW()
+         WHERE id = $1
+           AND status = 'inactive'
+         RETURNING id, title, status`,
+        [id]
+      );
+
+      if (!result.rowCount) {
+        return fail(
+          res,
+          404,
+          "Vaga não encontrada ou já está publicada."
+        );
+      }
+
+      return res.json({
+        sucesso: true,
+        mensagem: "Vaga reativada com sucesso.",
+        servico: result.rows[0]
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+  
 app.get(
   "/admin/servicos-publicados",
   auth,
