@@ -1170,16 +1170,16 @@ app.patch(
       }
 
       await client.query(
-        `UPDATE hiring_requests
-         SET status = $1,
-             assigned_professional_id = CASE
-               WHEN $1 = 'rejected' THEN NULL
-               ELSE assigned_professional_id
-             END,
-             updated_at = NOW()
-         WHERE id = $2`,
-        [status, requestId]
-      );
+  `UPDATE hiring_requests
+   SET status = $1::varchar,
+       assigned_professional_id = CASE
+         WHEN $1::varchar = 'rejected' THEN NULL
+         ELSE assigned_professional_id
+       END,
+       updated_at = NOW()
+   WHERE id = $2`,
+  [status, requestId]
+);
 
       await client.query("COMMIT");
 
