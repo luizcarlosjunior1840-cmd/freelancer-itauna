@@ -868,6 +868,43 @@ app.patch(
   }
 );
 
+app.patch(
+  "/admin/servicos/:id/retirar",
+  auth,
+  currentUser,
+  adminOnly,
+  async (req, res, next) => {
+    try {
+      const id = req.params.id;
+
+      if (!validUUID(id)) {
+        return fail(res, 400, "ID de vaga inválido.");
+      }
+
+      const result = await pool.query(
+        `UPDATE services
+         SET status = 'inactive',
+             updated_at = NOW()
+         WHERE id = $1
+         RETURNING id, title, status`,
+        [id]
+      );
+
+      if (!result.rowCount) {
+        return fail(res, 404, "Vaga não encontrada.");
+      }
+
+      return res.json({
+        sucesso: true,
+        mensagem: "Vaga retirada da publicação. O histórico foi preservado.",
+        servico: result.rows[0]
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+  
 /* =====================================================
    CANDIDATURAS ÀS VAGAS
 ===================================================== */
