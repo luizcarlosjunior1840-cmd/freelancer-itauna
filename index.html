@@ -1186,6 +1186,35 @@
           `<div class="message error">${escapeHTML(error.message)}</div>`;
       }
     }
+    
+async function carregarVagasPublicadas() {
+  try {
+    const data = await api("/admin/servicos-publicados");
+    const rows = data.servicos || [];
+
+    $("publishedJobs").innerHTML = rows.length
+      ? rows.map((job) => `
+          <div class="item">
+            <h3>${escapeHTML(job.title)}</h3>
+            <p><strong>Cidade:</strong> ${escapeHTML(job.city || "-")}</p>
+            <p><strong>Estado:</strong> ${escapeHTML(job.state || "-")}</p>
+            <p><strong>Valor:</strong> ${escapeHTML(job.price ?? "-")}</p>
+            <p><strong>Status:</strong> Publicada</p>
+            <div class="actions">
+              <button class="btn btn-danger" type="button"
+                onclick="retirarVagaPublicada('${job.id}')">
+                Retirar vaga
+              </button>
+            </div>
+          </div>
+        `).join("")
+      : '<p class="muted">Nenhuma vaga publicada encontrada.</p>';
+  } catch (error) {
+    $("publishedJobs").innerHTML =
+      '<div class="message error">Não foi possível carregar as vagas publicadas.</div>';
+  }
+}
+
 
     async function decidirVaga(id, status) {
       if (!confirm(`Confirma a decisão para esta vaga: ${rotuloStatus(status)}?`)) return;
@@ -1204,6 +1233,29 @@
       }
     }
 
+async function retirarVagaPublicada(id) {
+  if (!confirm("Tem certeza que deseja retirar esta vaga da publicação? O histórico será preservado.")) {
+    return;
+  }
+
+  try {
+    const data = await api(`/admin/servicos/${id}/retirar`, {
+      method: "PATCH"
+    });
+
+    showMessage("panelMessage", data.mensagem || "Vaga retirada da publicação.", "success");
+
+    await carregarVagasPublicadas();
+    await carregarVagas();
+  } catch (error) {
+    showMessage(
+      "panelMessage",
+      error.message || "Não foi possível retirar a vaga.",
+      "error"
+    );
+  }
+    }
+    
     async function carregarCandidaturasAdmin() {
       try {
         const data = await api("/configuracao/solicitacoes");
