@@ -810,7 +810,7 @@ app.get(
          JOIN users u ON u.id = s.professional_id
          LEFT JOIN categories c ON c.id = s.category_id
          WHERE s.status = 'pending'
-         ORDER BY s.created_at ASC`
+         ORDER BY s.created_at DESC`
       );
 
       res.json({
