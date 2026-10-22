@@ -1517,6 +1517,21 @@ app.post("/admin/bootstrap", async (req, res, next) => {
    ERROS E INICIALIZAÇÃO
 ===================================================== */
 
+
+app.get("/manifest.json", (req, res) => {
+  res.type("application/manifest+json");
+  res.sendFile(
+    require("path").join(__dirname, "manifest.json")
+  );
+});
+
+app.get("/service-worker.js", (req, res) => {
+  res.type("application/javascript");
+  res.setHeader("Service-Worker-Allowed", "/");
+  res.sendFile(
+    require("path").join(__dirname, "service-worker.js")
+  );
+});
 app.use((req, res) => {
   res.status(404).json({
     sucesso: false,
