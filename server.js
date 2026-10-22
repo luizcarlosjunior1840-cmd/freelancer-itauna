@@ -1532,6 +1532,13 @@ app.get("/service-worker.js", (req, res) => {
     require("path").join(__dirname, "service-worker.js")
   );
 });
+
+app.get("/icon.svg", (req, res) => {
+  res.type("image/svg+xml");
+  res.sendFile(
+    require("path").join(__dirname, "icon.svg")
+  );
+});
 app.use((req, res) => {
   res.status(404).json({
     sucesso: false,
