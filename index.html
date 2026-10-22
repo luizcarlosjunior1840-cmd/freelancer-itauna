@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#111827">
+  <link rel="manifest" href="/manifest.json">
   <meta name="description" content="Encontre vagas freelancer em Itaúna e região.">
   <title>Freelancer Itaúna | Vagas e profissionais</title>
 
@@ -1346,5 +1347,16 @@ async function retirarVagaPublicada(id) {
 
     iniciar();
   </script>
+
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("/service-worker.js")
+        .catch(function (error) {
+          console.error("Erro ao registrar o aplicativo:", error);
+        });
+    });
+  }
+</script>
 </body>
 </html>
