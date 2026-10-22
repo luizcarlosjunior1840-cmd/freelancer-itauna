@@ -1,0 +1,13 @@
+
+{
+  "name": "Freelancer Itaúna",
+  "short_name": "Freelancer Itaúna",
+  "description": "Encontre profissionais e serviços em Itaúna.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#17212b",
+  "orientation": "portrait",
+  "lang": "pt-BR"
+}
