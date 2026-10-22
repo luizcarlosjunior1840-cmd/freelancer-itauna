@@ -9,5 +9,14 @@
   "background_color": "#ffffff",
   "theme_color": "#17212b",
   "orientation": "portrait",
-  "lang": "pt-BR"
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
 }
+
