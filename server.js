@@ -563,12 +563,24 @@ app.post(
       }
 
       if (!dataValida(workDate)) {
-        return fail(res, 400, "Informe a data do trabalho.");
-      }
+  return fail(res, 400, "Informe a data inicial do trabalho.");
+}
 
-      if (!workHours) {
-        return fail(res, 400, "Informe o horário do trabalho.");
-      }
+if (!dataValida(workEndDate)) {
+  return fail(res, 400, "Informe a data final do trabalho.");
+}
+
+if (workEndDate < workDate) {
+  return fail(
+    res,
+    400,
+    "A data final não pode ser anterior à data inicial."
+  );
+}
+
+if (!workHours) {
+  return fail(res, 400, "Informe o horário do trabalho.");
+}
 
       if (
         rawPrice === undefined ||
@@ -589,13 +601,14 @@ app.post(
 
       const result = await pool.query(
         `INSERT INTO services
-          (professional_id, category_id, title, description, price,
-           city, state, status, establishment_name, neighborhood,
-           job_address, work_date, work_hours, vacancies_count)
-         VALUES
-          ($1, $2, $3, $4, $5, $6, $7, 'pending',
-           $8, $9, $10, $11, $12, $13)
-         RETURNING id, title, price, work_date, work_hours,
+  (professional_id, category_id, title, description, price,
+   city, state, status, establishment_name, neighborhood,
+   job_address, work_date, work_end_date, work_hours, vacancies_count)
+ VALUES
+  ($1, $2, $3, $4, $5, $6, $7, 'pending',
+   $8, $9, $10, $11, $12, $13, $14)
+ RETURNING id, title, price, work_date, work_end_date,
+           work_hours, vacancies_count, status, created_at` id, title, price, work_date, work_hours,
                    vacancies_count, status, created_at`,
         [
           req.user.id,
@@ -609,8 +622,9 @@ app.post(
           neighborhood,
           address,
           workDate,
-          workHours,
-          quantity
+workEndDate,
+workHours,
+quantity
         ]
       );
 
