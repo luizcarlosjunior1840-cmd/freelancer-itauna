@@ -450,8 +450,7 @@ app.get("/servicos", async (req, res, next) => {
       }
     }
 
-    const fullDetails =
-      user && ["client", "admin"].includes(user.role);
+    const fullDetails = user && user.role === "admin";
 
     const publicFields = `
       s.id,
