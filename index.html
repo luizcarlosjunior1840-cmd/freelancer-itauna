@@ -1017,6 +1017,7 @@
         city: $("jobCity").value.trim(),
         state: $("jobState").value.trim().toUpperCase(),
         work_date: $("jobDate").value,
+        work_end_date: $("jobEndDate").value,
         work_hours: $("jobHours").value.trim(),
         price: Number($("jobPrice").value),
         vacancies_count: Number($("jobQuantity").value),
@@ -1028,7 +1029,15 @@
         showMessage("panelMessage", "Selecione uma categoria.", "error");
         return;
       }
+if (!body.work_date || !body.work_end_date) {
+  showMessage("panelMessage", "Informe a data inicial e a data final.", "error");
+  return;
+}
 
+if (body.work_end_date < body.work_date) {
+  showMessage("panelMessage", "A data final não pode ser anterior à data inicial.", "error");
+  return;
+    }
       if (!Number.isInteger(body.vacancies_count) || body.vacancies_count < 1) {
         showMessage("panelMessage", "Informe uma quantidade válida de freelancers.", "error");
         return;
