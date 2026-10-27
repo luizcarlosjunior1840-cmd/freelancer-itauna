@@ -453,13 +453,13 @@ app.get("/servicos", async (req, res, next) => {
     const fullDetails = user && user.role === "admin";
 
     const publicFields = `
-      s.id,
-      s.title,
-      s.work_date,
-      s.work_end_date,
-      s.work_hours,
-      s.price
-    `;
+  s.id,
+  s.title,
+  s.price,
+  s.work_date,
+  s.work_end_date,
+  s.city
+`;
 
     const completeFields = `
       s.id,
