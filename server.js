@@ -155,7 +155,12 @@ function normalizarStatusVaga(status) {
 }
 
 function dataValida(value) {
-  return /^\d{4}-\d{2}-\d{2}$/.test(String(value || ""));
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(value || ""))) return false;
+  const [ano, mes, dia] = String(value).split("-").map(Number);
+  const data = new Date(Date.UTC(ano, mes - 1, dia));
+  return data.getUTCFullYear() === ano &&
+    data.getUTCMonth() === mes - 1 &&
+    data.getUTCDate() === dia;
 }
 
 /* =====================================================
@@ -452,6 +457,7 @@ app.get("/servicos", async (req, res, next) => {
       s.id,
       s.title,
       s.work_date,
+      s.work_end_date,
       s.work_hours,
       s.price
     `;
@@ -469,6 +475,7 @@ app.get("/servicos", async (req, res, next) => {
       s.neighborhood,
       s.job_address,
       s.work_date,
+      s.work_end_date,
       s.work_hours,
       s.vacancies_count,
       s.created_at,
@@ -527,6 +534,7 @@ app.post(
       ).toUpperCase();
 
       const workDate = txt(req.body.work_date || req.body.data_trabalho);
+      const workEndDate = txt(req.body.work_end_date || req.body.data_final_trabalho);
       const workHours = txt(req.body.work_hours || req.body.horario);
 
       const rawPrice = req.body.price ?? req.body.preco;
@@ -608,8 +616,7 @@ if (!workHours) {
   ($1, $2, $3, $4, $5, $6, $7, 'pending',
    $8, $9, $10, $11, $12, $13, $14)
  RETURNING id, title, price, work_date, work_end_date,
-           work_hours, vacancies_count, status, created_at` id, title, price, work_date, work_hours,
-                   vacancies_count, status, created_at`,
+           work_hours, vacancies_count, status, created_at`,
         [
           req.user.id,
           category,
@@ -814,7 +821,7 @@ app.get(
         `SELECT s.id, s.professional_id, s.category_id,
                 s.title, s.description, s.price, s.city, s.state,
                 s.establishment_name, s.neighborhood, s.job_address,
-                s.work_date, s.work_hours, s.vacancies_count,
+                s.work_date, s.work_end_date, s.work_hours, s.vacancies_count,
                 s.status, s.created_at,
                 u.name AS professional_name,
                 u.email AS professional_email,
@@ -969,7 +976,8 @@ app.get(
   async (req, res, next) => {
     try {
       const result = await pool.query(
-        `SELECT id, title, price, city, state, status, created_at
+        `SELECT id, title, price, city, state, status,
+                work_date, work_end_date, created_at
          FROM services
          WHERE status = 'active'
          ORDER BY created_at DESC
@@ -1083,7 +1091,7 @@ app.get(
         `SELECT h.id, h.service_id, h.details, h.status,
                 h.created_at, h.updated_at,
                 s.title AS service_title,
-                s.work_date, s.work_hours, s.price
+                s.work_date, s.work_end_date, s.work_hours, s.price
          FROM hiring_requests h
          JOIN services s ON s.id = h.service_id
          WHERE h.client_id = $1
@@ -1127,6 +1135,7 @@ app.get(
            s.title AS service_title,
            s.vacancies_count,
            s.work_date,
+           s.work_end_date,
            s.work_hours,
            s.price,
            candidate.name AS freelancer_name,
@@ -1392,7 +1401,7 @@ app.get(
                 s.title, s.description, s.price,
                 s.city, s.state, s.establishment_name,
                 s.neighborhood, s.job_address,
-                s.work_date, s.work_hours
+                s.work_date, s.work_end_date, s.work_hours
          FROM hiring_requests h
          JOIN services s ON s.id = h.service_id
          WHERE h.assigned_professional_id = $1
