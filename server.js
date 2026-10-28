@@ -458,7 +458,8 @@ app.get("/servicos", async (req, res, next) => {
   s.price,
   s.work_date,
   s.work_end_date,
-  s.city
+  s.city,
+s.work_hours
 `;
 
     const completeFields = `
