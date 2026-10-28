@@ -968,13 +968,16 @@
   user && user.role === "admin"
 );
 
-          let html = `
-            <article class="job-card">
-              <h3>${escapeHTML(job.title)}</h3>
-              <p class="job-value">${money(job.price)}</p>
-              <p><strong>Data:</strong> ${dateBR(job.work_date)}</p>
-              <p><strong>Horário:</strong> ${escapeHTML(job.work_hours || "A combinar")}</p>
-          `;
+          
+let html = `
+  <article class="job-card">
+    <h3>${escapeHTML(job.title)}</h3>
+    <p class="job-value">${money(job.price)}</p>
+    <p><strong>Data de início:</strong> ${dateBR(job.work_date)}</p>
+    <p><strong>Data de término:</strong> ${dateBR(job.work_end_date)}</p>
+    <p><strong>Cidade:</strong> ${escapeHTML(job.city || "-")}</p>
+`;
+    
 
           if (detailsVisible) {
             html += `
