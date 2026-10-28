@@ -1286,6 +1286,7 @@ async function carregarMinhasOportunidades() {
       }
     }
     
+
 async function carregarVagasPublicadas() {
   try {
     const data = await api("/admin/servicos-publicados");
@@ -1295,13 +1296,31 @@ async function carregarVagasPublicadas() {
       ? rows.map((job) => `
           <div class="item">
             <h3>${escapeHTML(job.title)}</h3>
-            <p><strong>Cidade:</strong> ${escapeHTML(job.city || "-")}</p>
-            <p><strong>Estado:</strong> ${escapeHTML(job.state || "-")}</p>
-            <p><strong>Valor:</strong> ${escapeHTML(job.price ?? "-")}</p>
+
+            <p><strong>Valor:</strong> ${money(job.price)}</p>
+            <p><strong>Cidade da vaga:</strong> ${escapeHTML(job.city || "-")}</p>
+            <p><strong>Estado da vaga:</strong> ${escapeHTML(job.state || "-")}</p>
+            <p><strong>Data inicial:</strong> ${dateBR(job.work_date)}</p>
+            <p><strong>Data final:</strong> ${dateBR(job.work_end_date)}</p>
+            <p><strong>Estabelecimento:</strong> ${escapeHTML(job.establishment_name || "-")}</p>
+            <p><strong>Endereço do trabalho:</strong> ${escapeHTML(job.job_address || "-")}</p>
+            <p><strong>Bairro:</strong> ${escapeHTML(job.neighborhood || "-")}</p>
+
+            <hr class="divider">
+            <h3>Dados do contratante</h3>
+
+            <p><strong>Nome:</strong> ${escapeHTML(job.contractor_name || "Não informado")}</p>
+            <p><strong>E-mail:</strong> ${escapeHTML(job.contractor_email || "Não informado")}</p>
+            <p><strong>Telefone/WhatsApp cadastrado:</strong> ${escapeHTML(job.contractor_phone || "Não informado")}</p>
+            <p><strong>Cidade do contratante:</strong> ${escapeHTML(job.contractor_city || "-")}</p>
+            <p><strong>Estado do contratante:</strong> ${escapeHTML(job.contractor_state || "-")}</p>
+            <p><strong>Tipo de conta:</strong> ${escapeHTML(job.contractor_role === "company" ? "Empresa" : "Contratante")}</p>
+
             <p><strong>Status:</strong> Publicada</p>
+
             <div class="actions">
               <button class="btn btn-danger" type="button"
-                onclick="retirarVagaPublicada('${job.id}')">
+                onclick="retirarVagaPublicada('${escapeHTML(job.id)}')">
                 Retirar vaga
               </button>
             </div>
@@ -1310,9 +1329,10 @@ async function carregarVagasPublicadas() {
       : '<p class="muted">Nenhuma vaga publicada encontrada.</p>';
   } catch (error) {
     $("publishedJobs").innerHTML =
-      '<div class="message error">Não foi possível carregar as vagas publicadas.</div>';
+      `<div class="message error">${escapeHTML(error.message || "Não foi possível carregar as vagas publicadas.")}</div>`;
   }
 }
+
 
 
     async function decidirVaga(id, status) {
