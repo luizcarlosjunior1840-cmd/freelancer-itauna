@@ -810,6 +810,7 @@
       if (user.role === "client") {
         $("freelancerPanel").classList.remove("hidden");
         carregarMinhasCandidaturas();
+      carregarMinhasOportunidades();
       } else if (["professional", "company"].includes(user.role)) {
         $("contractorPanel").classList.remove("hidden");
       } else if (user.role === "admin") {
@@ -1160,6 +1161,42 @@ if (body.work_end_date < body.work_date) {
       }
     }
 
+    
+async function carregarMinhasOportunidades() {
+  if (!user || user.role !== "client") return;
+
+  const container = $("myOpportunities");
+  container.innerHTML = '<p class="muted">Carregando oportunidades...</p>';
+
+  try {
+    const data = await api("/minhas-oportunidades");
+    const rows = data.oportunidades || [];
+
+    container.innerHTML = rows.length
+      ? rows.map((item) => `
+          <div class="item">
+            <h3>${escapeHTML(item.title)}</h3>
+            <p><strong>Valor:</strong> ${money(item.price)}</p>
+            <p><strong>Data de início:</strong> ${dateBR(item.work_date)}</p>
+            <p><strong>Data de término:</strong> ${dateBR(item.work_end_date)}</p>
+            <p><strong>Cidade:</strong> ${escapeHTML(item.city || "-")}</p>
+            <hr class="divider">
+            <p><strong>Estabelecimento:</strong> ${escapeHTML(item.establishment_name || "-")}</p>
+            <p><strong>Bairro:</strong> ${escapeHTML(item.neighborhood || "-")}</p>
+            <p><strong>Endereço:</strong> ${escapeHTML(item.job_address || "-")}</p>
+            <p><strong>Horário:</strong> ${escapeHTML(item.work_hours || "-")}</p>
+            <p><strong>Descrição:</strong><br>${escapeHTML(item.description || "-").replace(/\n/g, "<br>")}</p>
+            <span class="badge status-assigned">Vaga atribuída a você</span>
+          </div>
+        `).join("")
+      : '<p class="muted">Você ainda não possui vagas atribuídas.</p>';
+  } catch (error) {
+    container.innerHTML =
+      `<div class="message error">${escapeHTML(error.message)}</div>`;
+  }
+}
+
+    
     async function carregarCadastrosPendentes() {
       try {
         const data = await api("/admin/usuarios-pendentes");
