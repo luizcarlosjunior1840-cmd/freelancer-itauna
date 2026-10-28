@@ -964,8 +964,8 @@
 
         $("jobsList").innerHTML = jobs.map((job) => {
           const detailsVisible = Boolean(
-            user && ["client", "admin"].includes(user.role)
-          );
+  user && user.role === "admin"
+);
 
           let html = `
             <article class="job-card">
