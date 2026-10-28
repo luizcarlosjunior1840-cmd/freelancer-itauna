@@ -1021,17 +1021,6 @@ app.get(
     }
   }
 );
-
-
-      return res.json({
-        sucesso: true,
-        servicos: result.rows
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-);
   
 /* =====================================================
    CANDIDATURAS ÀS VAGAS
