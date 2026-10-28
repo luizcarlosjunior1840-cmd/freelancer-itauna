@@ -968,6 +968,7 @@ app.patch(
   }
 );
   
+
 app.get(
   "/admin/servicos-publicados",
   auth,
@@ -976,13 +977,51 @@ app.get(
   async (req, res, next) => {
     try {
       const result = await pool.query(
-        `SELECT id, title, price, city, state, status,
-                work_date, work_end_date, created_at
-         FROM services
-         WHERE status = 'active'
-         ORDER BY created_at DESC
+        `SELECT
+           s.id,
+           s.professional_id,
+           s.title,
+           s.description,
+           s.price,
+           s.city,
+           s.state,
+           s.establishment_name,
+           s.neighborhood,
+           s.job_address,
+           s.work_date,
+           s.work_end_date,
+           s.work_hours,
+           s.vacancies_count,
+           s.status,
+           s.created_at,
+
+           u.name AS contractor_name,
+           u.email AS contractor_email,
+           u.phone AS contractor_phone,
+           u.city AS contractor_city,
+           u.state AS contractor_state,
+           u.role AS contractor_role
+
+         FROM services s
+         JOIN users u
+           ON u.id = s.professional_id
+
+         WHERE s.status = 'active'
+
+         ORDER BY s.created_at DESC
          LIMIT 200`
       );
+
+      return res.json({
+        sucesso: true,
+        servicos: result.rows
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 
       return res.json({
         sucesso: true,
